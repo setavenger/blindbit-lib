@@ -84,14 +84,14 @@ func (r *RecipientImpl) GetPkScript() []byte {
 // Other data in the OwnedUTXOs is preserved.
 // At the moment it is always assumed that we receive a taproot input.
 type FeeRateCoinSelector struct {
-	OwnedUTXOs      []*UTXO
+	OwnedUTXOs      []*OwnedUTXO
 	MinChangeAmount uint64
 	Recipients      []Recipient
 	ChainParams     *chaincfg.Params
 }
 
 func NewFeeRateCoinSelector(
-	utxos []*UTXO,
+	utxos []*OwnedUTXO,
 	minChangeAmount uint64,
 	recipients []Recipient,
 	chainParams *chaincfg.Params,
@@ -111,7 +111,7 @@ func NewFeeRateCoinSelector(
 func (s *FeeRateCoinSelector) CoinSelect(
 	feeRate uint32,
 ) (
-	[]*UTXO, uint64, error,
+	[]*OwnedUTXO, uint64, error,
 ) {
 	// todo should we somehow expose the resulting vBytes for later analysis?
 	// todo reduce complexity in this function
@@ -151,7 +151,7 @@ func (s *FeeRateCoinSelector) CoinSelect(
 		}
 	}
 
-	var selectedInputs []*UTXO
+	var selectedInputs []*OwnedUTXO
 	var sumSelectedInputsAmounts uint64
 	//var potentialVBytes = vByte // tracks a potential increase before actually adding to the main vByte tracking
 

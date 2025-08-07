@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/rs/zerolog v1.34.0
 	github.com/setavenger/blindbit-scan v0.1.1
-	github.com/setavenger/go-bip352 v0.1.8-0.20250807110828-d3b2d21cc334
+	github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399
 	github.com/shopspring/decimal v1.4.0
 	github.com/tyler-smith/go-bip39 v1.1.0
 )

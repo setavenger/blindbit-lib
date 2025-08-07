@@ -115,6 +115,8 @@ github.com/setavenger/blindbitd v0.0.0-20240602183715-c4e971bba3e4 h1:mKbdSQiWnc
 github.com/setavenger/blindbitd v0.0.0-20240602183715-c4e971bba3e4/go.mod h1:+L9bcVMbECVSqYjj/LhBKWNM4uVNRayN86EcVCrnFBI=
 github.com/setavenger/go-bip352 v0.1.8-0.20250807110828-d3b2d21cc334 h1:kitvD2rxxMZE04GruqW7KihQFMb91nGeWJfDa5akSCQ=
 github.com/setavenger/go-bip352 v0.1.8-0.20250807110828-d3b2d21cc334/go.mod h1:j+5v4nI/7n9IBEnvr6LagRpe6whTAHjIBRtqJKyJKG4=
+github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399 h1:SZtpspHUg1VOm8YWDK2mSfyOukxE3xHgtlNT/dOs+4k=
+github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399/go.mod h1:j+5v4nI/7n9IBEnvr6LagRpe6whTAHjIBRtqJKyJKG4=
 github.com/setavenger/go-bip352 v0.1.8 h1:nJVRpBbM11PFHgBlv/g9mmWKlITnJCWplpTx6ggO4h0=
 github.com/setavenger/go-bip352 v0.1.8/go.mod h1:1JXIL3lJ95+uiOo3by4W9lHTG9n6mPIdiI9Y2W+cX5E=
 github.com/setavenger/go-libsecp256k1 v0.0.0-20250601142217-61f26e074fd5 h1:KKpLemBDPEQxNmTz2+5M8bWhlArls9ZkhkCHPPVh3RY=

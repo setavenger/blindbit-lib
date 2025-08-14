@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package blindbit.oracle.v1;
+
+option go_package = "./pb";
+
+// BlockBatch contains all necessary information to find out if utxo is in a block
+// and which it is
+// To check which addtional information is necessary
+message BlockBatchFull {
+  BlockIdentifier block_identifier = 1;
+  repeated bytes tweaks = 2; // Array of 33-byte tweak data
+  repeated UTXO utxos = 3;  // Array of UTXOs
+  FilterData new_utxos_filter = 4;
+  FilterData spent_utxos_filter = 5;
+  repeated bytes spent_utxos = 6;  // Array of 32-byte hashes
+}
+
+// BlockBatchSlim contains the least necessary information to find out if a utxo is in a block
+// To check which addtional information is necessary
+message BlockBatchSlim {
+  BlockIdentifier block_identifier = 1;
+  repeated bytes tweaks = 2; // Array of 33-byte tweak data
+  FilterData new_utxos_filter = 3;
+  FilterData spent_utxos_filter = 4;
+}
+
+message BlockIdentifier {
+  bytes block_hash = 1;  // 32 bytes
+  uint64 block_height = 2;
+}
+
+// TweakArray represents an array of tweaks for a block
+message TweakArray {
+  BlockIdentifier block_identifier = 1;
+  repeated bytes tweaks = 2; // Array of 33-byte tweak data
+}
+
+// UTXO represents an unspent transaction output
+message UTXO {
+  bytes txid = 1;           // 32 bytes
+  uint32 vout = 2;
+  uint64 value = 3;
+  bytes script_pub_key = 4; // Variable length
+  uint64 block_height = 5;
+  bytes block_hash = 6;     // 32 bytes
+  uint64 timestamp = 7;
+  bool spent = 8;
+}
+
+// UTXOArray represents an array of UTXOs for a block
+message UTXOArrayResponse {
+  BlockIdentifier block_identifier = 1;
+  repeated UTXO utxos = 2;  // Array of UTXOs
+}
+
+// Filter represents a compact filter
+message FilterRepsonse {
+  BlockIdentifier block_identifier = 1;
+  FilterData filter_data = 2;
+}
+
+message FilterData {
+  FilterType filter_type = 2;
+  bytes data = 3;           // Variable length filter data
+}
+
+// SpentOutpointsIndex represents the spent outpoints index for a block
+message SpentOutpointsIndexResponse {
+  BlockIdentifier block_identifier = 1;
+  repeated bytes data = 2;  // Array of 32-byte hashes
+}
+
+// FilterType defines the type of filter
+enum FilterType {
+  FILTER_TYPE_UNSPECIFIED = 0;
+  FILTER_TYPE_SPENT = 1;
+  FILTER_TYPE_NEW_UTXOS = 2;
+}
+
+// BlockHeightRequest requests data for a specific block height
+message BlockHeightRequest {
+  uint64 block_height = 1;
+}
+
+// BlockHeightRequest requests data for a specific block height
+message RangedBlockHeightRequest {
+  uint64 start = 1;
+  uint64 end = 2;
+}
+
+// BlockHeightResponse returns block height information
+message BlockHeightResponse {
+  uint64 block_height = 1;
+}
+
+// BlockHashResponse returns block hash information
+message BlockHashResponse {
+  bytes block_hash = 1;     // 32 bytes
+}
+
+// InfoResponse returns oracle information
+message InfoResponse {
+  string network = 1;
+  uint64 height = 2;
+  bool tweaks_only = 3;
+  bool tweaks_full_basic = 4;
+  bool tweaks_full_with_dust_filter = 5;
+  bool tweaks_cut_through_with_dust_filter = 6;
+}

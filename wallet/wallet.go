@@ -23,12 +23,32 @@ type Wallet struct {
 	UTXOMapping    UTXOMapping     `json:"utxo_mapping"` // used to keep track of utxos and not add the same twice
 }
 
+// Address of wallet
+// panics if something goes wrong
+func (w *Wallet) Address() string {
+	address, err := bip352.CreateAddress(
+		w.PubKeyScan.ToArrayPtr(),
+		w.PubKeySpend.ToArrayPtr(),
+		w.Network == types.NetworkMainnet, 0,
+	)
+	if err != nil {
+		// something is probably very wrong if the address generation fails
+		panic(err)
+	}
+	return address
+}
+
 func (w *Wallet) ChangeAddress() string {
 	if len(w.labelSlice) < 1 {
 		w.ComputeLabelForM(0)
 	}
 
 	return w.labelSlice[0].Address
+}
+func (w *Wallet) LabelSlice() []*bip352.Label {
+	out := make([]*bip352.Label, len(w.labelSlice))
+	copy(out, w.labelSlice)
+	return out
 }
 
 // If called several times sequentially one should start with largest m as slices is extended to match m and does a copy operation every time the length of Wallet.labelslice was inssufficient

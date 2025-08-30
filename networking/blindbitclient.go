@@ -16,7 +16,7 @@ type BlindBitConnector interface {
 	GetChainTip() (uint64, error)
 	GetFilter(blockHeight uint64, filterType FilterType) (*Filter, error)
 	GetSpentOutpointsIndex(blockHeight uint64) (SpentOutpointsIndex, error)
-	GetTweaks(blockHeight uint64, dustLimit uint64) ([][33]byte, error)
+	GetTweaks(blockHeight uint64, dustLimit uint64) ([][]byte, error)
 	GetUTXOs(blockHeight uint64) ([]*UTXOServed, error)
 }
 
@@ -81,7 +81,7 @@ type ChainTipRaw struct {
 	BlockHeight uint64 `json:"block_height"`
 }
 
-func (c *ClientBlindBit) GetTweaks(blockHeight, dustLimit uint64) ([][33]byte, error) {
+func (c *ClientBlindBit) GetTweaks(blockHeight, dustLimit uint64) ([][]byte, error) {
 	// todo add support for the /tweak-index/ endpoint
 	url := fmt.Sprintf("%s/tweaks/%d", c.BaseURL, blockHeight)
 	if dustLimit > 0 {
@@ -114,7 +114,7 @@ func (c *ClientBlindBit) GetTweaks(blockHeight, dustLimit uint64) ([][33]byte, e
 	}
 
 	// Convert []string to [][33]byte
-	var bytesData [][33]byte
+	var bytesData [][]byte
 	for _, hexStr := range data {
 		// Each string should be exactly 66 characters long (33 bytes)
 		if len(hexStr) != 66 {
@@ -127,9 +127,9 @@ func (c *ClientBlindBit) GetTweaks(blockHeight, dustLimit uint64) ([][33]byte, e
 			return nil, err
 		}
 		// Convert byte slice to [33]byte
-		var byteArray [33]byte
-		copy(byteArray[:], byteSlice[:])
-		bytesData = append(bytesData, byteArray)
+		// var byteArray [33]byte
+		// copy(byteArray[:], byteSlice[:])
+		bytesData = append(bytesData, byteSlice)
 	}
 
 	return bytesData, nil

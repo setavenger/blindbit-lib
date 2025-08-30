@@ -14,6 +14,12 @@ service OracleService {
   
   // StreamBlockBatchFull streams complete block batches with all data
   rpc StreamBlockBatchFull(RangedBlockHeightRequest) returns (stream BlockBatchFull);
+
+  // StreamBlockBatchSlim streams lightweight block batches for efficient processing
+  rpc StreamBlockBatchSlimStatic(RangedBlockHeightRequest) returns (stream BlockBatchSlim);
+  
+  // StreamBlockBatchFull streams complete block batches with all data
+  rpc StreamBlockBatchFullStatic(RangedBlockHeightRequest) returns (stream BlockBatchFull);
   
   // GetTweakArray returns tweaks for a specific block height
   rpc GetTweakArray(BlockHeightRequest) returns (TweakArray);

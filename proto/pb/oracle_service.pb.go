@@ -140,10 +140,12 @@ const file_oracle_service_proto_rawDesc = "" +
 	"\x10GetFilterRequest\x12!\n" +
 	"\fblock_height\x18\x01 \x01(\rR\vblockHeight\x12?\n" +
 	"\vfilter_type\x18\x02 \x01(\x0e2\x1e.blindbit.oracle.v1.FilterTypeR\n" +
-	"filterType2\xcc\a\n" +
+	"filterType2\xb0\t\n" +
 	"\rOracleService\x12j\n" +
 	"\x14StreamBlockBatchSlim\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchSlim0\x01\x12j\n" +
-	"\x14StreamBlockBatchFull\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchFull0\x01\x12W\n" +
+	"\x14StreamBlockBatchFull\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchFull0\x01\x12p\n" +
+	"\x1aStreamBlockBatchSlimStatic\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchSlim0\x01\x12p\n" +
+	"\x1aStreamBlockBatchFullStatic\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchFull0\x01\x12W\n" +
 	"\rGetTweakArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12^\n" +
 	"\x12GetTweakIndexArray\x12(.blindbit.oracle.v1.GetTweakIndexRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12]\n" +
 	"\fGetUTXOArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.UTXOArrayResponse\x12U\n" +
@@ -187,26 +189,30 @@ var file_oracle_service_proto_depIdxs = []int32{
 	2,  // 0: blindbit.oracle.v1.GetFilterRequest.filter_type:type_name -> blindbit.oracle.v1.FilterType
 	3,  // 1: blindbit.oracle.v1.OracleService.StreamBlockBatchSlim:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
 	3,  // 2: blindbit.oracle.v1.OracleService.StreamBlockBatchFull:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
-	4,  // 3: blindbit.oracle.v1.OracleService.GetTweakArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	0,  // 4: blindbit.oracle.v1.OracleService.GetTweakIndexArray:input_type -> blindbit.oracle.v1.GetTweakIndexRequest
-	4,  // 5: blindbit.oracle.v1.OracleService.GetUTXOArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	1,  // 6: blindbit.oracle.v1.OracleService.GetFilter:input_type -> blindbit.oracle.v1.GetFilterRequest
-	4,  // 7: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	5,  // 8: blindbit.oracle.v1.OracleService.GetInfo:input_type -> google.protobuf.Empty
-	5,  // 9: blindbit.oracle.v1.OracleService.GetBestBlockHeight:input_type -> google.protobuf.Empty
-	4,  // 10: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	6,  // 11: blindbit.oracle.v1.OracleService.StreamBlockBatchSlim:output_type -> blindbit.oracle.v1.BlockBatchSlim
-	7,  // 12: blindbit.oracle.v1.OracleService.StreamBlockBatchFull:output_type -> blindbit.oracle.v1.BlockBatchFull
-	8,  // 13: blindbit.oracle.v1.OracleService.GetTweakArray:output_type -> blindbit.oracle.v1.TweakArray
-	8,  // 14: blindbit.oracle.v1.OracleService.GetTweakIndexArray:output_type -> blindbit.oracle.v1.TweakArray
-	9,  // 15: blindbit.oracle.v1.OracleService.GetUTXOArray:output_type -> blindbit.oracle.v1.UTXOArrayResponse
-	10, // 16: blindbit.oracle.v1.OracleService.GetFilter:output_type -> blindbit.oracle.v1.FilterRepsonse
-	11, // 17: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:output_type -> blindbit.oracle.v1.SpentOutpointsIndexResponse
-	12, // 18: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
-	13, // 19: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
-	14, // 20: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
-	11, // [11:21] is the sub-list for method output_type
-	1,  // [1:11] is the sub-list for method input_type
+	3,  // 3: blindbit.oracle.v1.OracleService.StreamBlockBatchSlimStatic:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
+	3,  // 4: blindbit.oracle.v1.OracleService.StreamBlockBatchFullStatic:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
+	4,  // 5: blindbit.oracle.v1.OracleService.GetTweakArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	0,  // 6: blindbit.oracle.v1.OracleService.GetTweakIndexArray:input_type -> blindbit.oracle.v1.GetTweakIndexRequest
+	4,  // 7: blindbit.oracle.v1.OracleService.GetUTXOArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	1,  // 8: blindbit.oracle.v1.OracleService.GetFilter:input_type -> blindbit.oracle.v1.GetFilterRequest
+	4,  // 9: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	5,  // 10: blindbit.oracle.v1.OracleService.GetInfo:input_type -> google.protobuf.Empty
+	5,  // 11: blindbit.oracle.v1.OracleService.GetBestBlockHeight:input_type -> google.protobuf.Empty
+	4,  // 12: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	6,  // 13: blindbit.oracle.v1.OracleService.StreamBlockBatchSlim:output_type -> blindbit.oracle.v1.BlockBatchSlim
+	7,  // 14: blindbit.oracle.v1.OracleService.StreamBlockBatchFull:output_type -> blindbit.oracle.v1.BlockBatchFull
+	6,  // 15: blindbit.oracle.v1.OracleService.StreamBlockBatchSlimStatic:output_type -> blindbit.oracle.v1.BlockBatchSlim
+	7,  // 16: blindbit.oracle.v1.OracleService.StreamBlockBatchFullStatic:output_type -> blindbit.oracle.v1.BlockBatchFull
+	8,  // 17: blindbit.oracle.v1.OracleService.GetTweakArray:output_type -> blindbit.oracle.v1.TweakArray
+	8,  // 18: blindbit.oracle.v1.OracleService.GetTweakIndexArray:output_type -> blindbit.oracle.v1.TweakArray
+	9,  // 19: blindbit.oracle.v1.OracleService.GetUTXOArray:output_type -> blindbit.oracle.v1.UTXOArrayResponse
+	10, // 20: blindbit.oracle.v1.OracleService.GetFilter:output_type -> blindbit.oracle.v1.FilterRepsonse
+	11, // 21: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:output_type -> blindbit.oracle.v1.SpentOutpointsIndexResponse
+	12, // 22: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
+	13, // 23: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
+	14, // 24: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
+	13, // [13:25] is the sub-list for method output_type
+	1,  // [1:13] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name

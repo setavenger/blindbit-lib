@@ -20,16 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	OracleService_StreamBlockBatchSlim_FullMethodName   = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlim"
-	OracleService_StreamBlockBatchFull_FullMethodName   = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFull"
-	OracleService_GetTweakArray_FullMethodName          = "/blindbit.oracle.v1.OracleService/GetTweakArray"
-	OracleService_GetTweakIndexArray_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetTweakIndexArray"
-	OracleService_GetUTXOArray_FullMethodName           = "/blindbit.oracle.v1.OracleService/GetUTXOArray"
-	OracleService_GetFilter_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetFilter"
-	OracleService_GetSpentOutpointsIndex_FullMethodName = "/blindbit.oracle.v1.OracleService/GetSpentOutpointsIndex"
-	OracleService_GetInfo_FullMethodName                = "/blindbit.oracle.v1.OracleService/GetInfo"
-	OracleService_GetBestBlockHeight_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
-	OracleService_GetBlockHashByHeight_FullMethodName   = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
+	OracleService_StreamBlockBatchSlim_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlim"
+	OracleService_StreamBlockBatchFull_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFull"
+	OracleService_StreamBlockBatchSlimStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlimStatic"
+	OracleService_StreamBlockBatchFullStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFullStatic"
+	OracleService_GetTweakArray_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetTweakArray"
+	OracleService_GetTweakIndexArray_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetTweakIndexArray"
+	OracleService_GetUTXOArray_FullMethodName               = "/blindbit.oracle.v1.OracleService/GetUTXOArray"
+	OracleService_GetFilter_FullMethodName                  = "/blindbit.oracle.v1.OracleService/GetFilter"
+	OracleService_GetSpentOutpointsIndex_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetSpentOutpointsIndex"
+	OracleService_GetInfo_FullMethodName                    = "/blindbit.oracle.v1.OracleService/GetInfo"
+	OracleService_GetBestBlockHeight_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
+	OracleService_GetBlockHashByHeight_FullMethodName       = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
 )
 
 // OracleServiceClient is the client API for OracleService service.
@@ -40,6 +42,10 @@ type OracleServiceClient interface {
 	StreamBlockBatchSlim(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimClient, error)
 	// StreamBlockBatchFull streams complete block batches with all data
 	StreamBlockBatchFull(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullClient, error)
+	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
+	StreamBlockBatchSlimStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimStaticClient, error)
+	// StreamBlockBatchFull streams complete block batches with all data
+	StreamBlockBatchFullStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullStaticClient, error)
 	// GetTweakArray returns tweaks for a specific block height
 	GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error)
 	// GetTweakIndexArray returns tweak index data for a specific block height
@@ -130,6 +136,70 @@ func (x *oracleServiceStreamBlockBatchFullClient) Recv() (*BlockBatchFull, error
 	return m, nil
 }
 
+func (c *oracleServiceClient) StreamBlockBatchSlimStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimStaticClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[2], OracleService_StreamBlockBatchSlimStatic_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oracleServiceStreamBlockBatchSlimStaticClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OracleService_StreamBlockBatchSlimStaticClient interface {
+	Recv() (*BlockBatchSlim, error)
+	grpc.ClientStream
+}
+
+type oracleServiceStreamBlockBatchSlimStaticClient struct {
+	grpc.ClientStream
+}
+
+func (x *oracleServiceStreamBlockBatchSlimStaticClient) Recv() (*BlockBatchSlim, error) {
+	m := new(BlockBatchSlim)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *oracleServiceClient) StreamBlockBatchFullStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullStaticClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[3], OracleService_StreamBlockBatchFullStatic_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oracleServiceStreamBlockBatchFullStaticClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OracleService_StreamBlockBatchFullStaticClient interface {
+	Recv() (*BlockBatchFull, error)
+	grpc.ClientStream
+}
+
+type oracleServiceStreamBlockBatchFullStaticClient struct {
+	grpc.ClientStream
+}
+
+func (x *oracleServiceStreamBlockBatchFullStaticClient) Recv() (*BlockBatchFull, error) {
+	m := new(BlockBatchFull)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *oracleServiceClient) GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error) {
 	out := new(TweakArray)
 	err := c.cc.Invoke(ctx, OracleService_GetTweakArray_FullMethodName, in, out, opts...)
@@ -210,6 +280,10 @@ type OracleServiceServer interface {
 	StreamBlockBatchSlim(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimServer) error
 	// StreamBlockBatchFull streams complete block batches with all data
 	StreamBlockBatchFull(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullServer) error
+	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
+	StreamBlockBatchSlimStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimStaticServer) error
+	// StreamBlockBatchFull streams complete block batches with all data
+	StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error
 	// GetTweakArray returns tweaks for a specific block height
 	GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error)
 	// GetTweakIndexArray returns tweak index data for a specific block height
@@ -238,6 +312,12 @@ func (UnimplementedOracleServiceServer) StreamBlockBatchSlim(*RangedBlockHeightR
 }
 func (UnimplementedOracleServiceServer) StreamBlockBatchFull(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchFull not implemented")
+}
+func (UnimplementedOracleServiceServer) StreamBlockBatchSlimStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimStaticServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchSlimStatic not implemented")
+}
+func (UnimplementedOracleServiceServer) StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchFullStatic not implemented")
 }
 func (UnimplementedOracleServiceServer) GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTweakArray not implemented")
@@ -315,6 +395,48 @@ type oracleServiceStreamBlockBatchFullServer struct {
 }
 
 func (x *oracleServiceStreamBlockBatchFullServer) Send(m *BlockBatchFull) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _OracleService_StreamBlockBatchSlimStatic_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RangedBlockHeightRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OracleServiceServer).StreamBlockBatchSlimStatic(m, &oracleServiceStreamBlockBatchSlimStaticServer{stream})
+}
+
+type OracleService_StreamBlockBatchSlimStaticServer interface {
+	Send(*BlockBatchSlim) error
+	grpc.ServerStream
+}
+
+type oracleServiceStreamBlockBatchSlimStaticServer struct {
+	grpc.ServerStream
+}
+
+func (x *oracleServiceStreamBlockBatchSlimStaticServer) Send(m *BlockBatchSlim) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _OracleService_StreamBlockBatchFullStatic_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RangedBlockHeightRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OracleServiceServer).StreamBlockBatchFullStatic(m, &oracleServiceStreamBlockBatchFullStaticServer{stream})
+}
+
+type OracleService_StreamBlockBatchFullStaticServer interface {
+	Send(*BlockBatchFull) error
+	grpc.ServerStream
+}
+
+type oracleServiceStreamBlockBatchFullStaticServer struct {
+	grpc.ServerStream
+}
+
+func (x *oracleServiceStreamBlockBatchFullStaticServer) Send(m *BlockBatchFull) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -511,6 +633,16 @@ var OracleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamBlockBatchFull",
 			Handler:       _OracleService_StreamBlockBatchFull_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamBlockBatchSlimStatic",
+			Handler:       _OracleService_StreamBlockBatchSlimStatic_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamBlockBatchFullStatic",
+			Handler:       _OracleService_StreamBlockBatchFullStatic_Handler,
 			ServerStreams: true,
 		},
 	},

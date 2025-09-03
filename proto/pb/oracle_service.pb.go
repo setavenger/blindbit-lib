@@ -149,7 +149,7 @@ const file_oracle_service_proto_rawDesc = "" +
 	"\rGetTweakArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12^\n" +
 	"\x12GetTweakIndexArray\x12(.blindbit.oracle.v1.GetTweakIndexRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12]\n" +
 	"\fGetUTXOArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.UTXOArrayResponse\x12U\n" +
-	"\tGetFilter\x12$.blindbit.oracle.v1.GetFilterRequest\x1a\".blindbit.oracle.v1.FilterRepsonse\x12q\n" +
+	"\tGetFilter\x12$.blindbit.oracle.v1.GetFilterRequest\x1a\".blindbit.oracle.v1.FilterResponse\x12q\n" +
 	"\x16GetSpentOutpointsIndex\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a/.blindbit.oracle.v1.SpentOutpointsIndexResponse\x12C\n" +
 	"\aGetInfo\x12\x16.google.protobuf.Empty\x1a .blindbit.oracle.v1.InfoResponse\x12U\n" +
 	"\x12GetBestBlockHeight\x12\x16.google.protobuf.Empty\x1a'.blindbit.oracle.v1.BlockHeightResponse\x12e\n" +
@@ -179,7 +179,7 @@ var file_oracle_service_proto_goTypes = []any{
 	(*BlockBatchFull)(nil),              // 7: blindbit.oracle.v1.BlockBatchFull
 	(*TweakArray)(nil),                  // 8: blindbit.oracle.v1.TweakArray
 	(*UTXOArrayResponse)(nil),           // 9: blindbit.oracle.v1.UTXOArrayResponse
-	(*FilterRepsonse)(nil),              // 10: blindbit.oracle.v1.FilterRepsonse
+	(*FilterResponse)(nil),              // 10: blindbit.oracle.v1.FilterResponse
 	(*SpentOutpointsIndexResponse)(nil), // 11: blindbit.oracle.v1.SpentOutpointsIndexResponse
 	(*InfoResponse)(nil),                // 12: blindbit.oracle.v1.InfoResponse
 	(*BlockHeightResponse)(nil),         // 13: blindbit.oracle.v1.BlockHeightResponse
@@ -206,7 +206,7 @@ var file_oracle_service_proto_depIdxs = []int32{
 	8,  // 17: blindbit.oracle.v1.OracleService.GetTweakArray:output_type -> blindbit.oracle.v1.TweakArray
 	8,  // 18: blindbit.oracle.v1.OracleService.GetTweakIndexArray:output_type -> blindbit.oracle.v1.TweakArray
 	9,  // 19: blindbit.oracle.v1.OracleService.GetUTXOArray:output_type -> blindbit.oracle.v1.UTXOArrayResponse
-	10, // 20: blindbit.oracle.v1.OracleService.GetFilter:output_type -> blindbit.oracle.v1.FilterRepsonse
+	10, // 20: blindbit.oracle.v1.OracleService.GetFilter:output_type -> blindbit.oracle.v1.FilterResponse
 	11, // 21: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:output_type -> blindbit.oracle.v1.SpentOutpointsIndexResponse
 	12, // 22: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
 	13, // 23: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse

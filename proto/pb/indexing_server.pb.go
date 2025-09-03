@@ -488,7 +488,7 @@ func (x *UTXOArrayResponse) GetUtxos() []*UTXO {
 }
 
 // Filter represents a compact filter
-type FilterRepsonse struct {
+type FilterResponse struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
 	FilterData      *FilterData            `protobuf:"bytes,2,opt,name=filter_data,json=filterData,proto3" json:"filter_data,omitempty"`
@@ -496,20 +496,20 @@ type FilterRepsonse struct {
 	sizeCache       protoimpl.SizeCache
 }
 
-func (x *FilterRepsonse) Reset() {
-	*x = FilterRepsonse{}
+func (x *FilterResponse) Reset() {
+	*x = FilterResponse{}
 	mi := &file_indexing_server_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FilterRepsonse) String() string {
+func (x *FilterResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FilterRepsonse) ProtoMessage() {}
+func (*FilterResponse) ProtoMessage() {}
 
-func (x *FilterRepsonse) ProtoReflect() protoreflect.Message {
+func (x *FilterResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_indexing_server_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -521,19 +521,19 @@ func (x *FilterRepsonse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FilterRepsonse.ProtoReflect.Descriptor instead.
-func (*FilterRepsonse) Descriptor() ([]byte, []int) {
+// Deprecated: Use FilterResponse.ProtoReflect.Descriptor instead.
+func (*FilterResponse) Descriptor() ([]byte, []int) {
 	return file_indexing_server_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *FilterRepsonse) GetBlockIdentifier() *BlockIdentifier {
+func (x *FilterResponse) GetBlockIdentifier() *BlockIdentifier {
 	if x != nil {
 		return x.BlockIdentifier
 	}
 	return nil
 }
 
-func (x *FilterRepsonse) GetFilterData() *FilterData {
+func (x *FilterResponse) GetFilterData() *FilterData {
 	if x != nil {
 		return x.FilterData
 	}
@@ -542,6 +542,7 @@ func (x *FilterRepsonse) GetFilterData() *FilterData {
 
 type FilterData struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Blockhash     []byte                 `protobuf:"bytes,1,opt,name=blockhash,proto3" json:"blockhash,omitempty"`
 	FilterType    FilterType             `protobuf:"varint,2,opt,name=filter_type,json=filterType,proto3,enum=blindbit.oracle.v1.FilterType" json:"filter_type,omitempty"`
 	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"` // Variable length filter data
 	unknownFields protoimpl.UnknownFields
@@ -576,6 +577,13 @@ func (x *FilterData) ProtoReflect() protoreflect.Message {
 // Deprecated: Use FilterData.ProtoReflect.Descriptor instead.
 func (*FilterData) Descriptor() ([]byte, []int) {
 	return file_indexing_server_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *FilterData) GetBlockhash() []byte {
+	if x != nil {
+		return x.Blockhash
+	}
+	return nil
 }
 
 func (x *FilterData) GetFilterType() FilterType {
@@ -957,12 +965,13 @@ const file_indexing_server_proto_rawDesc = "" +
 	"\x11UTXOArrayResponse\x12N\n" +
 	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12.\n" +
 	"\x05utxos\x18\x02 \x03(\v2\x18.blindbit.oracle.v1.UTXOR\x05utxos\"\xa1\x01\n" +
-	"\x0eFilterRepsonse\x12N\n" +
+	"\x0eFilterResponse\x12N\n" +
 	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12?\n" +
 	"\vfilter_data\x18\x02 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\n" +
-	"filterData\"a\n" +
+	"filterData\"\x7f\n" +
 	"\n" +
-	"FilterData\x12?\n" +
+	"FilterData\x12\x1c\n" +
+	"\tblockhash\x18\x01 \x01(\fR\tblockhash\x12?\n" +
 	"\vfilter_type\x18\x02 \x01(\x0e2\x1e.blindbit.oracle.v1.FilterTypeR\n" +
 	"filterType\x12\x12\n" +
 	"\x04data\x18\x03 \x01(\fR\x04data\"\x81\x01\n" +
@@ -1015,7 +1024,7 @@ var file_indexing_server_proto_goTypes = []any{
 	(*TweakArray)(nil),                  // 4: blindbit.oracle.v1.TweakArray
 	(*UTXO)(nil),                        // 5: blindbit.oracle.v1.UTXO
 	(*UTXOArrayResponse)(nil),           // 6: blindbit.oracle.v1.UTXOArrayResponse
-	(*FilterRepsonse)(nil),              // 7: blindbit.oracle.v1.FilterRepsonse
+	(*FilterResponse)(nil),              // 7: blindbit.oracle.v1.FilterResponse
 	(*FilterData)(nil),                  // 8: blindbit.oracle.v1.FilterData
 	(*SpentOutpointsIndexResponse)(nil), // 9: blindbit.oracle.v1.SpentOutpointsIndexResponse
 	(*BlockHeightRequest)(nil),          // 10: blindbit.oracle.v1.BlockHeightRequest
@@ -1035,8 +1044,8 @@ var file_indexing_server_proto_depIdxs = []int32{
 	3,  // 7: blindbit.oracle.v1.TweakArray.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
 	3,  // 8: blindbit.oracle.v1.UTXOArrayResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
 	5,  // 9: blindbit.oracle.v1.UTXOArrayResponse.utxos:type_name -> blindbit.oracle.v1.UTXO
-	3,  // 10: blindbit.oracle.v1.FilterRepsonse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	8,  // 11: blindbit.oracle.v1.FilterRepsonse.filter_data:type_name -> blindbit.oracle.v1.FilterData
+	3,  // 10: blindbit.oracle.v1.FilterResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
+	8,  // 11: blindbit.oracle.v1.FilterResponse.filter_data:type_name -> blindbit.oracle.v1.FilterData
 	0,  // 12: blindbit.oracle.v1.FilterData.filter_type:type_name -> blindbit.oracle.v1.FilterType
 	3,  // 13: blindbit.oracle.v1.SpentOutpointsIndexResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
 	14, // [14:14] is the sub-list for method output_type

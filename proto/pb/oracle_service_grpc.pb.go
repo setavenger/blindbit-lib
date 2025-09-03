@@ -53,7 +53,7 @@ type OracleServiceClient interface {
 	// GetUTXOArray returns UTXOs for a specific block height
 	GetUTXOArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*UTXOArrayResponse, error)
 	// GetFilter returns filter data for a specific block height and type
-	GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterRepsonse, error)
+	GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterResponse, error)
 	// GetSpentOutpointsIndex returns spent outpoints index for a specific block height
 	GetSpentOutpointsIndex(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*SpentOutpointsIndexResponse, error)
 	// GetInfo returns oracle information
@@ -227,8 +227,8 @@ func (c *oracleServiceClient) GetUTXOArray(ctx context.Context, in *BlockHeightR
 	return out, nil
 }
 
-func (c *oracleServiceClient) GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterRepsonse, error) {
-	out := new(FilterRepsonse)
+func (c *oracleServiceClient) GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterResponse, error) {
+	out := new(FilterResponse)
 	err := c.cc.Invoke(ctx, OracleService_GetFilter_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ type OracleServiceServer interface {
 	// GetUTXOArray returns UTXOs for a specific block height
 	GetUTXOArray(context.Context, *BlockHeightRequest) (*UTXOArrayResponse, error)
 	// GetFilter returns filter data for a specific block height and type
-	GetFilter(context.Context, *GetFilterRequest) (*FilterRepsonse, error)
+	GetFilter(context.Context, *GetFilterRequest) (*FilterResponse, error)
 	// GetSpentOutpointsIndex returns spent outpoints index for a specific block height
 	GetSpentOutpointsIndex(context.Context, *BlockHeightRequest) (*SpentOutpointsIndexResponse, error)
 	// GetInfo returns oracle information
@@ -328,7 +328,7 @@ func (UnimplementedOracleServiceServer) GetTweakIndexArray(context.Context, *Get
 func (UnimplementedOracleServiceServer) GetUTXOArray(context.Context, *BlockHeightRequest) (*UTXOArrayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUTXOArray not implemented")
 }
-func (UnimplementedOracleServiceServer) GetFilter(context.Context, *GetFilterRequest) (*FilterRepsonse, error) {
+func (UnimplementedOracleServiceServer) GetFilter(context.Context, *GetFilterRequest) (*FilterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFilter not implemented")
 }
 func (UnimplementedOracleServiceServer) GetSpentOutpointsIndex(context.Context, *BlockHeightRequest) (*SpentOutpointsIndexResponse, error) {

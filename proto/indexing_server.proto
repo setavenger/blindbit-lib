@@ -55,12 +55,13 @@ message UTXOArrayResponse {
 }
 
 // Filter represents a compact filter
-message FilterRepsonse {
+message FilterResponse {
   BlockIdentifier block_identifier = 1;
   FilterData filter_data = 2;
 }
 
 message FilterData {
+  bytes blockhash = 1;
   FilterType filter_type = 2;
   bytes data = 3;           // Variable length filter data
 }

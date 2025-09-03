@@ -31,7 +31,7 @@ service OracleService {
   rpc GetUTXOArray(BlockHeightRequest) returns (UTXOArrayResponse);
   
   // GetFilter returns filter data for a specific block height and type
-  rpc GetFilter(GetFilterRequest) returns (FilterRepsonse);
+  rpc GetFilter(GetFilterRequest) returns (FilterResponse);
   
   // GetSpentOutpointsIndex returns spent outpoints index for a specific block height
   rpc GetSpentOutpointsIndex(BlockHeightRequest) returns (SpentOutpointsIndexResponse);

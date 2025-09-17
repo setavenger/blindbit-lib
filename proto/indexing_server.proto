@@ -90,6 +90,14 @@ message RangedBlockHeightRequest {
   uint64 end = 2;
 }
 
+// BlockHeightRequest requests data for a specific block height
+message RangedBlockHeightRequestFiltered {
+  uint64 start = 1;
+  uint64 end = 2;
+  uint64 dustlimit = 3;
+  bool cut_through = 4;
+}
+
 // BlockHeightResponse returns block height information
 message BlockHeightResponse {
   uint64 block_height = 1;
@@ -108,4 +116,15 @@ message InfoResponse {
   bool tweaks_full_basic = 4;
   bool tweaks_full_with_dust_filter = 5;
   bool tweaks_cut_through_with_dust_filter = 6;
+}
+
+message IndexShortOuts {
+  BlockIdentifier block_identifier = 1;
+  repeated ComputeIndexTxItem index = 2;
+}
+
+message ComputeIndexTxItem {
+  bytes txid = 1;
+  bytes tweak = 2;
+  bytes outputs_short = 3; // 8 byte outputs must be length mod 8 = 0
 }

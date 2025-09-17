@@ -24,6 +24,7 @@ const (
 	OracleService_StreamBlockBatchFull_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFull"
 	OracleService_StreamBlockBatchSlimStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlimStatic"
 	OracleService_StreamBlockBatchFullStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFullStatic"
+	OracleService_StreamIndexShortOuts_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamIndexShortOuts"
 	OracleService_GetTweakArray_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetTweakArray"
 	OracleService_GetTweakIndexArray_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetTweakIndexArray"
 	OracleService_GetUTXOArray_FullMethodName               = "/blindbit.oracle.v1.OracleService/GetUTXOArray"
@@ -46,6 +47,7 @@ type OracleServiceClient interface {
 	StreamBlockBatchSlimStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimStaticClient, error)
 	// StreamBlockBatchFull streams complete block batches with all data
 	StreamBlockBatchFullStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullStaticClient, error)
+	StreamIndexShortOuts(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamIndexShortOutsClient, error)
 	// GetTweakArray returns tweaks for a specific block height
 	GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error)
 	// GetTweakIndexArray returns tweak index data for a specific block height
@@ -200,6 +202,38 @@ func (x *oracleServiceStreamBlockBatchFullStaticClient) Recv() (*BlockBatchFull,
 	return m, nil
 }
 
+func (c *oracleServiceClient) StreamIndexShortOuts(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamIndexShortOutsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[4], OracleService_StreamIndexShortOuts_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oracleServiceStreamIndexShortOutsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OracleService_StreamIndexShortOutsClient interface {
+	Recv() (*IndexShortOuts, error)
+	grpc.ClientStream
+}
+
+type oracleServiceStreamIndexShortOutsClient struct {
+	grpc.ClientStream
+}
+
+func (x *oracleServiceStreamIndexShortOutsClient) Recv() (*IndexShortOuts, error) {
+	m := new(IndexShortOuts)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *oracleServiceClient) GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error) {
 	out := new(TweakArray)
 	err := c.cc.Invoke(ctx, OracleService_GetTweakArray_FullMethodName, in, out, opts...)
@@ -284,6 +318,7 @@ type OracleServiceServer interface {
 	StreamBlockBatchSlimStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimStaticServer) error
 	// StreamBlockBatchFull streams complete block batches with all data
 	StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error
+	StreamIndexShortOuts(*RangedBlockHeightRequestFiltered, OracleService_StreamIndexShortOutsServer) error
 	// GetTweakArray returns tweaks for a specific block height
 	GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error)
 	// GetTweakIndexArray returns tweak index data for a specific block height
@@ -318,6 +353,9 @@ func (UnimplementedOracleServiceServer) StreamBlockBatchSlimStatic(*RangedBlockH
 }
 func (UnimplementedOracleServiceServer) StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchFullStatic not implemented")
+}
+func (UnimplementedOracleServiceServer) StreamIndexShortOuts(*RangedBlockHeightRequestFiltered, OracleService_StreamIndexShortOutsServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamIndexShortOuts not implemented")
 }
 func (UnimplementedOracleServiceServer) GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTweakArray not implemented")
@@ -437,6 +475,27 @@ type oracleServiceStreamBlockBatchFullStaticServer struct {
 }
 
 func (x *oracleServiceStreamBlockBatchFullStaticServer) Send(m *BlockBatchFull) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _OracleService_StreamIndexShortOuts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RangedBlockHeightRequestFiltered)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OracleServiceServer).StreamIndexShortOuts(m, &oracleServiceStreamIndexShortOutsServer{stream})
+}
+
+type OracleService_StreamIndexShortOutsServer interface {
+	Send(*IndexShortOuts) error
+	grpc.ServerStream
+}
+
+type oracleServiceStreamIndexShortOutsServer struct {
+	grpc.ServerStream
+}
+
+func (x *oracleServiceStreamIndexShortOutsServer) Send(m *IndexShortOuts) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -643,6 +702,11 @@ var OracleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamBlockBatchFullStatic",
 			Handler:       _OracleService_StreamBlockBatchFullStatic_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamIndexShortOuts",
+			Handler:       _OracleService_StreamIndexShortOuts_Handler,
 			ServerStreams: true,
 		},
 	},

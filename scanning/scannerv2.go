@@ -1,7 +1,9 @@
 package scanning
 
 import (
+	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -9,20 +11,24 @@ import (
 	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/networking/v2connect"
 	"github.com/setavenger/blindbit-lib/proto/pb"
+	"github.com/setavenger/blindbit-lib/utils"
+	"github.com/setavenger/blindbit-lib/wallet"
 	"github.com/setavenger/go-bip352"
 )
 
 type ScannerV2 struct {
+	oracleClient        *v2connect.OracleClient
 	scanKey             [32]byte
 	receiverSpendPubKey *[33]byte
 	labels              []*bip352.Label
 
-	lastScanHeight    uint32
-	scanning          bool
-	stopChan          chan struct{}
-	utxosChan         chan []*FoundOutputShort
-	chanCalledAlready bool
-	oracleClient      *v2connect.OracleClient
+	lastScanHeight            uint32
+	scanning                  bool
+	stopChan                  chan struct{}
+	utxosIncompleteChan       chan []*FoundOutputShort
+	utxosIncompleteChanCalled bool
+	utxosOwnedChan            chan []*wallet.OwnedUTXO
+	utxosOwnedChanCalled      bool
 }
 
 func NewScannerV2(
@@ -37,15 +43,17 @@ func NewScannerV2(
 	receiverSpendPubKeyCopy := [33]byte(receiverSpendPubKey)
 
 	return &ScannerV2{
-		oracleClient:        oracleClient,
-		scanKey:             scanKeyCopy,
-		receiverSpendPubKey: &receiverSpendPubKeyCopy,
-		labels:              labels,
-		lastScanHeight:      0,
-		scanning:            false,
-		stopChan:            make(chan struct{}),
-		utxosChan:           make(chan []*FoundOutputShort),
-		chanCalledAlready:   false,
+		oracleClient:              oracleClient,
+		scanKey:                   scanKeyCopy,
+		receiverSpendPubKey:       &receiverSpendPubKeyCopy,
+		labels:                    labels,
+		lastScanHeight:            0,
+		scanning:                  false,
+		stopChan:                  make(chan struct{}),
+		utxosIncompleteChan:       make(chan []*FoundOutputShort),
+		utxosIncompleteChanCalled: false,
+		utxosOwnedChan:            make(chan []*wallet.OwnedUTXO),
+		utxosOwnedChanCalled:      false,
 	}
 }
 
@@ -70,7 +78,6 @@ func (s *ScannerV2) Scan(ctx context.Context, startHeight, endHeight uint32) err
 		s.scanning = true
 		defer s.setScanFalse()
 		defer close(doneChan)
-		defer func() { doneChan <- struct{}{} }()
 
 		for {
 			select {
@@ -90,7 +97,18 @@ func (s *ScannerV2) Scan(ctx context.Context, startHeight, endHeight uint32) err
 					return
 				}
 
-				for _, computeIndexTxItem := range blockData.Index {
+				for i := range blockData.Index {
+					computeIndexTxItem := blockData.Index[i]
+					myBytes, _ := hex.DecodeString("668317dd7ed4b0ab0b744e280506a21f1891b93e72d57a409f04279f6c7ca93e")
+					if bytes.Equal(utils.ReverseBytesCopy(computeIndexTxItem.Txid[:]), myBytes) {
+						logging.L.Info().
+							Hex("txid", myBytes).
+							Hex("outputs", computeIndexTxItem.OutputsShort).
+							Hex("tweak", computeIndexTxItem.Tweak).
+							Uint64("height", blockData.BlockIdentifier.BlockHeight).
+							Hex("blockhash", blockData.BlockIdentifier.BlockHash).
+							Msg("")
+					}
 					txCounter++
 					foundOutputs, err := ReceiverScanTransactionShortOutputsProto(
 						s.scanKey,
@@ -103,7 +121,12 @@ func (s *ScannerV2) Scan(ctx context.Context, startHeight, endHeight uint32) err
 						return
 					}
 					if len(foundOutputs) > 0 {
-						s.utxosChan <- foundOutputs
+						// Assign txid to all found outputs before sending through channel
+						txid := [32]byte(utils.ReverseBytesCopy(computeIndexTxItem.Txid))
+						for j := range foundOutputs {
+							foundOutputs[j].Txid = txid
+						}
+						s.utxosIncompleteChan <- foundOutputs
 					}
 					s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
 				}
@@ -134,18 +157,32 @@ func (s *ScannerV2) SetHeight(height uint32) {
 	s.lastScanHeight = height
 }
 
+// NewOwnedUtxosChan can only have one caller
+// Data is only pushed through once.
+// todo: should work like context.Context.Done()
+func (s *ScannerV2) NewOwnedUTXOsChan() <-chan []*wallet.OwnedUTXO {
+	if s.utxosOwnedChanCalled {
+		panic("NewOwnedUtxosChan can only have one caller")
+	}
+	s.utxosOwnedChanCalled = true
+	if s.utxosOwnedChan == nil {
+		s.utxosOwnedChan = make(chan []*wallet.OwnedUTXO)
+	}
+	return s.utxosOwnedChan
+}
+
 // NewUtxosChan can only have one caller
 // Data is only pushed through once.
 // todo: should work like context.Context.Done()
-func (s *ScannerV2) NewUtxosChan() <-chan []*FoundOutputShort {
-	if s.chanCalledAlready {
-		panic("NewUtxosChan can only have one caller")
+func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan []*FoundOutputShort {
+	if s.utxosIncompleteChanCalled {
+		panic("NewIncompleteUtxosChan can only have one caller")
 	}
-	s.chanCalledAlready = true
-	if s.utxosChan == nil {
-		s.utxosChan = make(chan []*FoundOutputShort)
+	s.utxosIncompleteChanCalled = true
+	if s.utxosIncompleteChan == nil {
+		s.utxosIncompleteChan = make(chan []*FoundOutputShort)
 	}
-	return s.utxosChan
+	return s.utxosIncompleteChan
 }
 
 func (s *ScannerV2) setScanFalse() { s.scanning = false }

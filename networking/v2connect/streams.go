@@ -30,6 +30,14 @@ func (c *OracleClient) Close() error {
 	return c.conn.Close()
 }
 
+func (c *OracleClient) StreamBlockBatchFull(
+	ctx context.Context, request *pb.RangedBlockHeightRequest,
+) (
+	pb.OracleService_StreamBlockBatchFullClient, error,
+) {
+	return c.client.StreamBlockBatchFull(ctx, request)
+}
+
 func (c *OracleClient) StreamBlockBatchFullStatic(
 	ctx context.Context, request *pb.RangedBlockHeightRequest,
 ) (

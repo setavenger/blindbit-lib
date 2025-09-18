@@ -19,6 +19,7 @@ type OwnedUTXO struct {
 	PrivKeyTweak [32]byte      `json:"priv_key_tweak"`
 	PubKey       [32]byte      `json:"pub_key"` // are always even hence we omit the parity byte
 	Timestamp    uint64        `json:"timestamp"`
+	Height       uint32        `json:"height"`
 	State        UTXOState     `json:"utxo_state"`
 	Label        *bip352.Label `json:"label"` // the pubKey associated with the label
 }
@@ -31,6 +32,7 @@ type OwnedUtxoJSON struct {
 	PrivKeyTweak string           `json:"priv_key_tweak"`
 	PubKey       string           `json:"pub_key"`
 	Timestamp    uint64           `json:"timestamp"`
+	Height       uint32           `json:"height"`
 	State        UTXOState        `json:"utxo_state"`
 	Label        *Bip352LabelJSON `json:"label"` // the pubKey associated with the label
 }
@@ -52,6 +54,7 @@ func (u OwnedUTXO) MarshalJSON() ([]byte, error) {
 		PrivKeyTweak: hex.EncodeToString(u.PrivKeyTweak[:]),
 		PubKey:       hex.EncodeToString(u.PubKey[:]),
 		Timestamp:    u.Timestamp,
+		Height:       u.Height,
 		State:        u.State,
 		Label:        label,
 	}
@@ -93,6 +96,7 @@ func (u *OwnedUTXO) UnmarshalJSON(data []byte) error {
 		PrivKeyTweak: utils.ConvertToFixedLength32(privKeyTweak),
 		PubKey:       utils.ConvertToFixedLength32(pubKey),
 		Timestamp:    aux.Timestamp,
+		Height:       aux.Height,
 		State:        aux.State,
 		Label:        label,
 	}

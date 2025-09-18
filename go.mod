@@ -10,10 +10,13 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/rs/zerolog v1.34.0
 	github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399
+	github.com/setavenger/go-libsecp256k1 v0.0.0-20250601142217-61f26e074fd5
 	github.com/shopspring/decimal v1.4.0
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.6
 )
+
+replace github.com/setavenger/go-libsecp256k1 => ../go-libsecp256k1_silentpayment_pr/
 
 require (
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
@@ -24,7 +27,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/setavenger/go-libsecp256k1 v0.0.0-20250601142217-61f26e074fd5 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect

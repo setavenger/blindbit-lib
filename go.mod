@@ -9,7 +9,7 @@ require (
 	github.com/btcsuite/btcd/btcutil/psbt v1.1.10
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/rs/zerolog v1.34.0
-	github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399
+	github.com/setavenger/go-bip352 v0.1.9-0.20250919170152-7683068d2f35
 	github.com/shopspring/decimal v1.4.0
 	google.golang.org/protobuf v1.36.2
 )

@@ -6,6 +6,7 @@ Witness data is also very standardised.
 */
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/go-bip352"
 )
 
@@ -103,12 +105,28 @@ func NewFeeRateCoinSelector(
 		ChainParams:     chainParams,
 	}
 }
+func (s *FeeRateCoinSelector) CoinSelect(
+	feeRate uint32,
+) (
+	[]*OwnedUTXO, uint64, error,
+) {
+	// todo: merge the two functions should be possible to unify logic
+	// reduces reduncant code and complexity
+	// less places to edit in case of change
+	ownedUTXOs, change, err := s.coinSelectWithChange(feeRate)
+	if err != nil && errors.Is(err, ErrInsufficientFunds) {
+		logging.L.Debug().Msg("fallback to no-change coinselector")
+		ownedUTXOs, change, err = s.coinselectNoChange(feeRate)
+	}
+
+	return ownedUTXOs, change, err
+}
 
 // CoinSelect
 // returns the utxos to select and the change amount in order to achieve the desired fee rate.
 // NOTE: A change amount is always added.
 // todo don't require a change amount and just increase fee if difference is below a certain threshold
-func (s *FeeRateCoinSelector) CoinSelect(
+func (s *FeeRateCoinSelector) coinSelectWithChange(
 	feeRate uint32,
 ) (
 	[]*OwnedUTXO, uint64, error,
@@ -128,8 +146,7 @@ func (s *FeeRateCoinSelector) CoinSelect(
 	//
 	outputLens, err := extractPkScriptsFromRecipients(s.Recipients, s.ChainParams)
 	if err != nil {
-		fmt.Printf("Error extracting pkScripts: %v\n", err)
-		fmt.Printf("Recipients: %v\n", s.Recipients)
+		logging.L.Err(err).Any("recipients", s.Recipients).Msg("Error extracting pkScripts")
 		return nil, 0, err
 	}
 
@@ -155,18 +172,20 @@ func (s *FeeRateCoinSelector) CoinSelect(
 	var sumSelectedInputsAmounts uint64
 	//var potentialVBytes = vByte // tracks a potential increase before actually adding to the main vByte tracking
 
-	for i, utxo := range s.OwnedUTXOs {
-		_ = i
+	// moved up as anyways always needed
+	vByte += WitnessCountLen / 4
+	// always add change
+	// todo don't do that
+	vByte += OutputValueLen + float64(wire.VarIntSerializeSize(uint64(ScriptPubKeyTaprootLen))) + float64(ScriptPubKeyTaprootLen)
+
+	for idx := range s.OwnedUTXOs {
+		utxo := s.OwnedUTXOs[idx]
+		if utxo.State == StateSpent {
+			continue
+		}
 		// we check that the sum of selected input amounts exceeds the (target Value + fees + (min. change))
 		selectedInputs = append(selectedInputs, utxo)
 		sumSelectedInputsAmounts += utxo.Amount
-
-		if i == 0 {
-			vByte += WitnessCountLen / 4
-			// always add change
-			// todo don't do that
-			vByte += OutputValueLen + float64(wire.VarIntSerializeSize(uint64(ScriptPubKeyTaprootLen))) + float64(ScriptPubKeyTaprootLen)
-		}
 
 		// outpoint size
 		vByte += TrInputOutpointLen
@@ -182,6 +201,88 @@ func (s *FeeRateCoinSelector) CoinSelect(
 		}
 	}
 
+	return nil, 0, ErrInsufficientFunds
+}
+
+func (s *FeeRateCoinSelector) coinselectNoChange(
+	feeRate uint32,
+) (
+	[]*OwnedUTXO, uint64, error,
+) {
+	// todo should we somehow expose the resulting vBytes for later analysis?
+	// todo reduce complexity in this function
+	if feeRate < 1 {
+		return nil, 0, ErrInvalidFeeRate
+	}
+	// track vBytes of the transaction
+	var vByte float64 // todo make sure we don't face any decimal imprecision
+
+	// OVERHEAD will always be there
+	vByte += NTxVersionLen + SegWitMarkerLenAndSegWitFlagLen + NLockTimeLen
+	vByte += NumInputsLen
+
+	//
+	outputLens, err := extractPkScriptsFromRecipients(s.Recipients, s.ChainParams)
+	if err != nil {
+		logging.L.Err(err).Any("recipients", s.Recipients).Msg("Error extracting pkScripts")
+		return nil, 0, err
+	}
+
+	vByte += float64(wire.VarIntSerializeSize(uint64(len(outputLens))))
+
+	// END OVERHEAD should be 10.5 vByte here
+
+	// add outputs to vByte
+	for _, scriptPubKeyLen := range outputLens {
+		vByte += OutputValueLen + float64(wire.VarIntSerializeSize(uint64(scriptPubKeyLen))) + float64(scriptPubKeyLen)
+	}
+
+	var sumTargetAmount uint64
+	for _, recipient := range s.Recipients {
+		if recipient.GetAmount() > 0 {
+			sumTargetAmount += recipient.GetAmount()
+		} else {
+			return nil, 0, ErrRecipientAmountIsZero
+		}
+	}
+
+	var selectedInputs []*OwnedUTXO
+	var sumSelectedInputsAmounts uint64
+
+	// todo: add note what this quarter byte is
+	vByte += WitnessCountLen / 4
+	// always add change other function tries without
+	vByte += OutputValueLen + float64(wire.VarIntSerializeSize(uint64(ScriptPubKeyTaprootLen))) + float64(ScriptPubKeyTaprootLen)
+
+	for idx := range s.OwnedUTXOs {
+		utxo := s.OwnedUTXOs[idx]
+		if utxo.State == StateSpent {
+			continue
+		}
+
+		// we check that the sum of selected input amounts exceeds the (target Value + fees + (min. change))
+		selectedInputs = append(selectedInputs, utxo)
+		sumSelectedInputsAmounts += utxo.Amount
+
+		// outpoint size
+		vByte += TrInputOutpointLen
+		vByte += TrWitnessDataLen
+
+		// todo also check that the fee rate is as we want it
+		if sumSelectedInputsAmounts > sumTargetAmount+NeededFeeAbsolutSats(vByte, feeRate) {
+
+			// if we inlcude dust as mining fee.
+			// we end up below the minimum change amount but the utxos are still selected
+			// so we end up paying more in fees
+			// -- continue comment --
+			// if the min change amount is not hit we set to zero
+			changeAmount := sumSelectedInputsAmounts - (sumTargetAmount + NeededFeeAbsolutSats(vByte, feeRate))
+			if changeAmount < s.MinChangeAmount {
+				changeAmount = 0
+			}
+			return selectedInputs, changeAmount, err
+		}
+	}
 	return nil, 0, ErrInsufficientFunds
 }
 

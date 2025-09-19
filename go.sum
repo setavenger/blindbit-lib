@@ -102,8 +102,10 @@ github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/f
 github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
 github.com/rs/zerolog v1.34.0 h1:k43nTLIwcTVQAncfCw4KZ2VY6ukYoZaBPNOE8txlOeY=
 github.com/rs/zerolog v1.34.0/go.mod h1:bJsvje4Z08ROH4Nhs5iH600c3IkWhwp44iRc54W6wYQ=
-github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399 h1:SZtpspHUg1VOm8YWDK2mSfyOukxE3xHgtlNT/dOs+4k=
-github.com/setavenger/go-bip352 v0.1.8-0.20250807125845-136879952399/go.mod h1:j+5v4nI/7n9IBEnvr6LagRpe6whTAHjIBRtqJKyJKG4=
+github.com/setavenger/go-bip352 v0.1.9-0.20250919170152-7683068d2f35 h1:SO7qG88fWMhINMfcTUvbUAupJcYBipCZ4od81/tB+UI=
+github.com/setavenger/go-bip352 v0.1.9-0.20250919170152-7683068d2f35/go.mod h1:j+5v4nI/7n9IBEnvr6LagRpe6whTAHjIBRtqJKyJKG4=
+github.com/setavenger/go-libsecp256k1 v0.0.0-20250601142217-61f26e074fd5 h1:KKpLemBDPEQxNmTz2+5M8bWhlArls9ZkhkCHPPVh3RY=
+github.com/setavenger/go-libsecp256k1 v0.0.0-20250601142217-61f26e074fd5/go.mod h1:TOguhOrbK0FoBk466b3CjYHbaYrZcB6CJteeq/K5w/4=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

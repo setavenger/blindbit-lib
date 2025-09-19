@@ -14,6 +14,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/types"
 	"github.com/setavenger/go-bip352"
 )
@@ -80,6 +81,7 @@ func (w *Wallet) SendToRecipients(
 
 	selectedUTXOs, changeAmount, err := selector.CoinSelect(uint32(feeRate))
 	if err != nil {
+		logging.L.Err(err).Msg("failed to do coin select")
 		return nil, err
 	}
 

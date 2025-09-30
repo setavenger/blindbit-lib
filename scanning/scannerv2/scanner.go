@@ -1,17 +1,23 @@
-package scanning
+package scannerv2
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/networking/v2connect"
 	"github.com/setavenger/blindbit-lib/proto/pb"
+	"github.com/setavenger/blindbit-lib/scanning"
 	"github.com/setavenger/blindbit-lib/wallet"
 	"github.com/setavenger/go-bip352"
 )
+
+// assertion on interfaces
+
+var _ scanning.OwnedScanner = (*ScannerV2)(nil)
 
 type ScannerV2 struct {
 	oracleClient        *v2connect.OracleClient
@@ -19,13 +25,18 @@ type ScannerV2 struct {
 	receiverSpendPubKey *[33]byte
 	labels              []*bip352.Label
 
-	lastScanHeight            uint32
-	scanning                  bool
-	stopChan                  chan struct{}
-	utxosIncompleteChan       chan []*FoundOutputShort
+	lastScanHeight      uint32
+	scanning            bool
+	stopChan            chan struct{}
+	utxosIncompleteChan chan []*scanning.FoundOutputShort
+	utxosOwnedChan      chan []*wallet.OwnedUTXO
+	progressChan        chan uint32
+
+	// helpers
+	mu                        sync.Mutex
 	utxosIncompleteChanCalled bool
-	utxosOwnedChan            chan []*wallet.OwnedUTXO
 	utxosOwnedChanCalled      bool
+	progressChanCalled        bool
 }
 
 func NewScannerV2(
@@ -47,20 +58,46 @@ func NewScannerV2(
 		lastScanHeight:            0,
 		scanning:                  false,
 		stopChan:                  make(chan struct{}),
-		utxosIncompleteChan:       make(chan []*FoundOutputShort),
+		utxosIncompleteChan:       make(chan []*scanning.FoundOutputShort),
 		utxosIncompleteChanCalled: false,
 		utxosOwnedChan:            make(chan []*wallet.OwnedUTXO),
 		utxosOwnedChanCalled:      false,
+		progressChan:              make(chan uint32),
+		progressChanCalled:        false,
 	}
+}
+
+func (s *ScannerV2) Close() error {
+	return nil
+}
+
+func (s *ScannerV2) ProgressUpdateChan() <-chan uint32 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.progressChanCalled {
+		s.mu.Unlock()
+		panic("progress channel can only be called once")
+	}
+	s.progressChanCalled = true
+	if s.progressChan == nil {
+		s.progressChan = make(chan uint32)
+	}
+	return s.progressChan
 }
 
 // Scan scans the blocks between startHeight and endHeight
 // is blocking
-func (s *ScannerV2) Scan(ctx context.Context, startHeight, endHeight uint32) error {
-	stream, err := s.oracleClient.StreamIndexShortOuts(ctx, &pb.RangedBlockHeightRequestFiltered{
-		Start: uint64(startHeight),
-		End:   uint64(endHeight),
-	})
+func (s *ScannerV2) Scan(
+	ctx context.Context,
+	startHeight, endHeight uint32,
+) error {
+	stream, err := s.oracleClient.StreamIndexShortOuts(
+		ctx,
+		&pb.RangedBlockHeightRequestFiltered{
+			Start: uint64(startHeight),
+			End:   uint64(endHeight),
+		},
+	)
 	if err != nil {
 		logging.L.Err(err).Msg("failed to stream block batch slim")
 		return err
@@ -98,7 +135,7 @@ func (s *ScannerV2) Scan(ctx context.Context, startHeight, endHeight uint32) err
 				for i := range blockData.Index {
 					txCounter++
 					computeIndexTxItem := blockData.Index[i]
-					foundOutputs, err := ReceiverScanTransactionShortOutputsProto(
+					foundOutputs, err := scanning.ReceiverScanTransactionShortOutputsProto(
 						s.scanKey,
 						s.receiverSpendPubKey,
 						s.labels,
@@ -168,7 +205,11 @@ func (s *ScannerV2) SetHeight(height uint32) {
 // Data is only pushed through once.
 // todo: should work like context.Context.Done()
 func (s *ScannerV2) NewOwnedUTXOsChan() <-chan []*wallet.OwnedUTXO {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.utxosOwnedChanCalled {
+		s.mu.Unlock()
 		panic("NewOwnedUtxosChan can only have one caller")
 	}
 	s.utxosOwnedChanCalled = true
@@ -181,13 +222,17 @@ func (s *ScannerV2) NewOwnedUTXOsChan() <-chan []*wallet.OwnedUTXO {
 // NewUtxosChan can only have one caller
 // Data is only pushed through once.
 // todo: should work like context.Context.Done()
-func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan []*FoundOutputShort {
+func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan []*scanning.FoundOutputShort {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.utxosIncompleteChanCalled {
+		s.mu.Unlock()
 		panic("NewIncompleteUtxosChan can only have one caller")
 	}
 	s.utxosIncompleteChanCalled = true
 	if s.utxosIncompleteChan == nil {
-		s.utxosIncompleteChan = make(chan []*FoundOutputShort)
+		s.utxosIncompleteChan = make(chan []*scanning.FoundOutputShort)
 	}
 	return s.utxosIncompleteChan
 }

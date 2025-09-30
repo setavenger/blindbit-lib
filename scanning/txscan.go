@@ -7,7 +7,6 @@ import (
 	"github.com/setavenger/blindbit-lib/proto/pb"
 	"github.com/setavenger/blindbit-lib/utils"
 	"github.com/setavenger/go-bip352"
-	golibsecp256k1 "github.com/setavenger/go-libsecp256k1"
 )
 
 // wrapper function for the ReceiverScanTransactionShortOutputs with pb.ShortOutput
@@ -41,19 +40,22 @@ func ReceiverScanTransactionShortOutputsProto(
 		return nil, nil
 	}
 
-	logging.L.Info().
-		Hex("txid", computeIndexTxItem.Txid).
-		Hex("tweak", computeIndexTxItem.Tweak).
-		Hex("output_array", computeIndexTxItem.OutputsShort).
-		Msg("")
-
 	txid := [32]byte(utils.ReverseBytesCopy(computeIndexTxItem.Txid))
 	for i := range founds {
 		founds[i].Txid = txid
+
+		// we need to compute the original tweak
+		// during scanning an in-place change on on the public component happens
+		// We could alterantively:
+		// - copy the bytes before -> slow down for all txs even the ones where we find nothing
+		// - build a scanning function with a shared secret as input
+		// - we recompute orgiinal rweak ("easiest for now") (curren solution)
 	}
 
 	return founds, err
 }
+
+// compute original tweak
 
 // ReceiverScanTransaction
 // scanKey: scanning secretKey of the receiver
@@ -184,87 +186,6 @@ func ReceiverScanTransactionShortOutputs(
 			break
 		}
 	}
-	return foundOutputs, nil
-}
-
-func ReceiverScanTransactionShortOutputsProtoSPModule(
-	scanKey [32]byte,
-	receiverSpendPubKey *[33]byte,
-	labels []*bip352.Label,
-	computeIndexTxItem *pb.ComputeIndexTxItem,
-) ([]*FoundOutputShort, error) {
-	txOutputsShort := make([][8]byte, len(computeIndexTxItem.OutputsShort)/8)
-	for i := range txOutputsShort {
-		txOutputsShort[i] = [8]byte(computeIndexTxItem.OutputsShort[i*8 : (i+1)*8])
-	}
-
-	founds, err := ReceiverScanTransactionShortOutputsSPModule(
-		scanKey,
-		receiverSpendPubKey,
-		labels,
-		txOutputsShort,
-		(*[33]byte)(computeIndexTxItem.Tweak),
-		nil,
-	)
-	if err != nil {
-		logging.L.Err(err).
-			Hex("txid", computeIndexTxItem.Txid).
-			Msg("failed to scan transaction")
-		return nil, err
-	}
-
-	if len(founds) == 0 {
-		return nil, nil
-	}
-
-	txid := [32]byte(utils.ReverseBytesCopy(computeIndexTxItem.Txid))
-	for i := range founds {
-		founds[i].Txid = txid
-	}
-
-	return founds, err
-}
-
-// ReceiverScanTransaction
-// scanKey: scanning secretKey of the receiver
-//
-// receiverSpendPubKey: spend pubKey of the receiver
-//
-// txOutputs: x-only outputs of the specific transaction
-//
-// labels: existing label public keys as bytes [wallets should always check for the change label]
-//
-// publicComponent: either A_sum or tweaked (A_sum * input_hash);
-// if already tweaked the inputHash should be nil or the computation will be flawed
-//
-// inputHash: 32 byte can be nil if publicComponent is a tweak and already includes the input_hash
-func ReceiverScanTransactionShortOutputsSPModule(
-	scanKey [32]byte,
-	receiverSpendPubKey *[33]byte,
-	labels []*bip352.Label,
-	txOutputs [][8]byte, // 8 byte short outputs only first bytes
-	publicComponent *[33]byte,
-	inputHash *[32]byte,
-) ([]*FoundOutputShort, error) {
-	// todo should probably check inputs before computation especially the labels
-	var foundOutputs []*FoundOutputShort
-
-	found, err := golibsecp256k1.TxScan(
-		&scanKey,
-		receiverSpendPubKey,
-		publicComponent,
-		txOutputs,
-	)
-	if err != nil {
-		logging.L.Err(err).Msg("error in go-libsecp256k1 TxScan")
-		return nil, err
-	}
-
-	foundOutputs = make([]*FoundOutputShort, len(found))
-	for i := range foundOutputs {
-		foundOutputs[i] = new(FoundOutputShort)
-	}
-
 	return foundOutputs, nil
 }
 

@@ -17,7 +17,11 @@ import (
 
 // assertion on interfaces
 
-var _ scanning.OwnedScanner = (*ScannerV2)(nil)
+var (
+	_ scanning.OwnedScanner   = (*ScannerV2)(nil)
+	_ scanning.PartialScanner = (*ScannerV2)(nil)
+	_ scanning.FullScanner    = (*ScannerV2)(nil)
+)
 
 type ScannerV2 struct {
 	oracleClient        *v2connect.OracleClient
@@ -28,8 +32,8 @@ type ScannerV2 struct {
 	lastScanHeight      uint32
 	scanning            bool
 	stopChan            chan struct{}
-	utxosIncompleteChan chan []*scanning.FoundOutputShort
-	utxosOwnedChan      chan []*wallet.OwnedUTXO
+	utxosIncompleteChan chan *scanning.FoundOutputShort
+	utxosOwnedChan      chan *wallet.OwnedUTXO
 	progressChan        chan uint32
 
 	// helpers
@@ -58,9 +62,9 @@ func NewScannerV2(
 		lastScanHeight:            0,
 		scanning:                  false,
 		stopChan:                  make(chan struct{}),
-		utxosIncompleteChan:       make(chan []*scanning.FoundOutputShort),
+		utxosIncompleteChan:       make(chan *scanning.FoundOutputShort),
 		utxosIncompleteChanCalled: false,
-		utxosOwnedChan:            make(chan []*wallet.OwnedUTXO),
+		utxosOwnedChan:            make(chan *wallet.OwnedUTXO),
 		utxosOwnedChanCalled:      false,
 		progressChan:              make(chan uint32),
 		progressChanCalled:        false,
@@ -68,6 +72,12 @@ func NewScannerV2(
 }
 
 func (s *ScannerV2) Close() error {
+	var err error
+	err = s.Stop()
+	if err != nil {
+		logging.L.Err(err).Msg("failed to stop scanner")
+		return err
+	}
 	return nil
 }
 
@@ -83,6 +93,10 @@ func (s *ScannerV2) ProgressUpdateChan() <-chan uint32 {
 		s.progressChan = make(chan uint32)
 	}
 	return s.progressChan
+}
+
+func (s *ScannerV2) ScanHeight() uint32 {
+	return 0
 }
 
 // Scan scans the blocks between startHeight and endHeight
@@ -150,7 +164,9 @@ func (s *ScannerV2) Scan(
 							foundOutputs[j].Txid = [32]byte(computeIndexTxItem.Txid)
 						}
 						if s.utxosIncompleteChanCalled {
-							s.utxosIncompleteChan <- foundOutputs
+							for i := range foundOutputs {
+								s.utxosIncompleteChan <- foundOutputs[i]
+							}
 						}
 						for i := range foundOutputs {
 							foundOutputs[i].Height = uint32(blockData.BlockIdentifier.BlockHeight)
@@ -162,7 +178,9 @@ func (s *ScannerV2) Scan(
 							return
 						}
 						if len(ownedUTXOs) > 0 && s.utxosOwnedChanCalled {
-							s.utxosOwnedChan <- ownedUTXOs
+							for i := range ownedUTXOs {
+								s.utxosOwnedChan <- ownedUTXOs[i]
+							}
 						}
 					}
 					s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
@@ -180,14 +198,19 @@ func (s *ScannerV2) Scan(
 		// do nothing
 	}
 
-	fmt.Println("txCounter:", txCounter)
+	// fmt.Println("txCounter:", txCounter)
+	logging.L.Trace().Msgf("txCounter: %d", txCounter)
 
 	return nil
 }
 
 // Stop the scanner
-func (s *ScannerV2) Stop() {
-	s.stopChan <- struct{}{}
+func (s *ScannerV2) Stop() error {
+	// s.stopChan <- struct{}{}
+	close(s.stopChan)
+	// todo: can we somehow get an error involved here?
+	//  shutdown callback function?
+	return nil
 }
 
 // GetUtxos get the utxos
@@ -201,10 +224,14 @@ func (s *ScannerV2) SetHeight(height uint32) {
 	s.lastScanHeight = height
 }
 
+func (s *ScannerV2) SubscribeOwnedUTXOs() <-chan *wallet.OwnedUTXO {
+	return s.NewOwnedUTXOsChan()
+}
+
 // NewOwnedUtxosChan can only have one caller
 // Data is only pushed through once.
 // todo: should work like context.Context.Done()
-func (s *ScannerV2) NewOwnedUTXOsChan() <-chan []*wallet.OwnedUTXO {
+func (s *ScannerV2) NewOwnedUTXOsChan() <-chan *wallet.OwnedUTXO {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -214,15 +241,19 @@ func (s *ScannerV2) NewOwnedUTXOsChan() <-chan []*wallet.OwnedUTXO {
 	}
 	s.utxosOwnedChanCalled = true
 	if s.utxosOwnedChan == nil {
-		s.utxosOwnedChan = make(chan []*wallet.OwnedUTXO)
+		s.utxosOwnedChan = make(chan *wallet.OwnedUTXO)
 	}
 	return s.utxosOwnedChan
+}
+
+func (s *ScannerV2) SubscribeProbableUTXOs() <-chan *scanning.FoundOutputShort {
+	return s.NewIncompleteUTXOsChan()
 }
 
 // NewUtxosChan can only have one caller
 // Data is only pushed through once.
 // todo: should work like context.Context.Done()
-func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan []*scanning.FoundOutputShort {
+func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan *scanning.FoundOutputShort {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -232,7 +263,7 @@ func (s *ScannerV2) NewIncompleteUTXOsChan() <-chan []*scanning.FoundOutputShort
 	}
 	s.utxosIncompleteChanCalled = true
 	if s.utxosIncompleteChan == nil {
-		s.utxosIncompleteChan = make(chan []*scanning.FoundOutputShort)
+		s.utxosIncompleteChan = make(chan *scanning.FoundOutputShort)
 	}
 	return s.utxosIncompleteChan
 }

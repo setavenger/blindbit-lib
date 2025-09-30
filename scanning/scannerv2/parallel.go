@@ -10,6 +10,7 @@ import (
 
 	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/proto/pb"
+	"github.com/setavenger/blindbit-lib/scanning"
 )
 
 // Scan scans the blocks between startHeight and endHeight
@@ -83,7 +84,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 					for i := range blockData.Index {
 						computeIndexTxItem := blockData.Index[i]
 						txCounter.Add(1)
-						foundOutputs, err := ReceiverScanTransactionShortOutputsProto(
+						foundOutputs, err := scanning.ReceiverScanTransactionShortOutputsProto(
 							s.scanKey,
 							s.receiverSpendPubKey,
 							s.labels,
@@ -117,7 +118,9 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 								// for i := range ownedUTXOs {
 								// 	ownedUTXOs[i].Height = uint32(blockData.BlockIdentifier.BlockHeight)
 								// }
-								s.utxosOwnedChan <- ownedUTXOs
+								for i := range ownedUTXOs {
+									s.utxosOwnedChan <- ownedUTXOs[i]
+								}
 							}
 							fmt.Println("sent through")
 						}

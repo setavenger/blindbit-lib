@@ -17,7 +17,7 @@ type BaseScanner interface {
 	// Watch will trigger a continuous scan
 	// This should listen for new blocks
 	// thus keeping the scanner at chaintip
-	Watch() error
+	Watch(context.Context) error
 
 	// Starts the scan for a given range
 	Scan(ctx context.Context, start, end uint32) error

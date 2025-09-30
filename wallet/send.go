@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/types"
+	"github.com/setavenger/blindbit-lib/utils"
 	"github.com/setavenger/go-bip352"
 )
 
@@ -169,33 +170,33 @@ func (w *Wallet) SendToRecipients(
 		return nil, err
 	}
 
-	// if markSpent {
-	// 	var found int
-	// 	// now that everything worked mark as spent if desired
-	// 	for _, vin := range vins {
-	// 		vinOutpoint, err := utils.SerialiseVinToOutpoint(*vin)
-	// 		if err != nil {
-	// 			logging.ErrorLogger.Println(err)
-	// 			return nil, err
-	// 		}
-	// 		for _, utxo := range d.Wallet.UTXOs {
-	// 			utxoOutpoint, err := utxo.SerialiseToOutpoint()
-	// 			if err != nil {
-	// 				logging.ErrorLogger.Println(err)
-	// 				return nil, err
-	// 			}
-	// 			if bytes.Equal(vinOutpoint[:], utxoOutpoint[:]) {
-	// 				utxo.State = src.StateUnconfirmedSpent
-	// 				found++
-	// 				logging.DebugLogger.Printf("Marked %x as spent\n", utxoOutpoint)
-	// 			}
-	// 		}
-	// 	}
-	// 	if found != len(vins) {
-	// 		err = fmt.Errorf("we could not mark enough utxos as spent. marked %d, needed %d", found, len(vins))
-	// 		return nil, err
-	// 	}
-	// }
+	if markSpent {
+		var found int
+		// now that everything worked mark as spent if desired
+		for _, vin := range vins {
+			vinOutpoint, err := utils.SerialiseToOutpoint(vin.Txid, vin.Vout)
+			if err != nil {
+				logging.L.Err(err).Msg("failed serialise vin outpoint")
+				return nil, err
+			}
+			for _, utxo := range w.UTXOs {
+				utxoOutpoint, err := utxo.SerialiseToOutpoint()
+				if err != nil {
+					logging.L.Err(err).Msg("failed serialise wallet utxo outpoint")
+					return nil, err
+				}
+				if bytes.Equal(vinOutpoint[:], utxoOutpoint[:]) {
+					utxo.State = StateUnconfirmedSpent
+					found++
+					logging.L.Debug().Hex("outpoint", utxoOutpoint[:]).Msg("internally marked as unconfirmed spent")
+				}
+			}
+		}
+		if found != len(vins) {
+			err = fmt.Errorf("we could not mark enough utxos as spent. marked %d, needed %d", found, len(vins))
+			return nil, err
+		}
+	}
 
 	return buf.Bytes(), err
 }

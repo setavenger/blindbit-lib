@@ -435,12 +435,24 @@ func ConvertSPRecipient(recipient *bip352.Recipient) *RecipientImpl {
 }
 
 func ConvertOwnedUTXOIntoVin(utxo *OwnedUTXO) bip352.Vin {
+	// copy byte slices and arrays which might be in-place changed in later funcs
+	var txid [32]byte
+	var secretKey [32]byte
+	var scriptPubKey [34]byte
+
+	copy(txid[:], utxo.Txid[:])
+	copy(secretKey[:], utxo.PrivKeyTweak[:])
+
+	// fill the first two bytes
+	scriptPubKey[0], scriptPubKey[1] = 0x51, 0x20
+	copy(scriptPubKey[2:], utxo.PubKey[:])
+
 	vin := bip352.Vin{
-		Txid:         utxo.Txid,
+		Txid:         txid,
 		Vout:         utxo.Vout,
 		Amount:       utxo.Amount,
-		ScriptPubKey: append([]byte{0x51, 0x20}, utxo.PubKey[:]...),
-		SecretKey:    &utxo.PrivKeyTweak,
+		ScriptPubKey: scriptPubKey[:],
+		SecretKey:    &secretKey,
 		Taproot:      true,
 	}
 	return vin

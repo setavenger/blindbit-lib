@@ -43,13 +43,6 @@ func ReceiverScanTransactionShortOutputsProto(
 	txid := [32]byte(utils.ReverseBytesCopy(computeIndexTxItem.Txid))
 	for i := range founds {
 		founds[i].Txid = txid
-
-		// we need to compute the original tweak
-		// during scanning an in-place change on on the public component happens
-		// We could alterantively:
-		// - copy the bytes before -> slow down for all txs even the ones where we find nothing
-		// - build a scanning function with a shared secret as input
-		// - we recompute orgiinal rweak ("easiest for now") (curren solution)
 	}
 
 	return founds, err
@@ -116,61 +109,31 @@ func ReceiverScanTransactionShortOutputs(
 				continue
 			}
 
+			/*
+				Labels with short outputs need a different logic
+				We cannot do a look up `label = output - P_k`
+				So we do `P_k + label = output` and we only check the first 8 bytes
+			*/
+
 			// now check the labels
 			var foundLabel *bip352.Label
 
-			// todo: benchmark against
-			// var prependedTxOutput [33]byte
-			// prependedTxOutput[0] = 0x02
-			// copy(prependedTxOutput[1:], txOutput[:])
-
-			prependedTxOutput := utils.ConvertToFixedLength33(append([]byte{0x02}, txOutputs[i][:]...))
-			prependedOutputPubKey := utils.ConvertToFixedLength33(append([]byte{0x02}, outputPubKey[:]...))
-
-			// start with normal output
-			foundLabel, err = MatchLabels(prependedTxOutput, prependedOutputPubKey, labels)
+			foundLabel, err = MatchLabelsOnShort(txOutputs[i], outputPubKey, labels)
 			if err != nil {
 				return nil, err
 			}
 
-			// important: copy the tweak to avoid modifying the original tweak
-			var secKeyTweak [32]byte
-			copy(secKeyTweak[:], tweak[:])
-
 			if foundLabel != nil {
+				// important: copy the tweak to avoid modifying the original tweak
+				var secKeyTweak [32]byte
+				copy(secKeyTweak[:], tweak[:])
+
 				err = bip352.AddPrivateKeys(&secKeyTweak, &foundLabel.Tweak) // labels have a modified tweak
 				if err != nil {
 					return nil, err
 				}
 				foundOutputs = append(foundOutputs, &FoundOutputShort{
 					Output:      txOutputs[i],
-					SecKeyTweak: secKeyTweak,
-					Label:       foundLabel,
-					Tweak:       *publicComponent,
-				})
-				txOutputs = append(txOutputs[:i], txOutputs[i+1:]...)
-				found = true
-				k++
-				break
-			}
-
-			// try the negated output for the label
-			err = bip352.NegatePublicKey(&prependedTxOutput)
-			if err != nil {
-				return nil, err
-			}
-
-			foundLabel, err = MatchLabels(prependedTxOutput, prependedOutputPubKey, labels)
-			if err != nil {
-				return nil, err
-			}
-			if foundLabel != nil {
-				err = bip352.AddPrivateKeys(&secKeyTweak, &foundLabel.Tweak) // labels have a modified tweak
-				if err != nil {
-					return nil, err
-				}
-				foundOutputs = append(foundOutputs, &FoundOutputShort{
-					Output:      [8]byte(prependedTxOutput[1:9]), // 8 bytes
 					SecKeyTweak: secKeyTweak,
 					Label:       foundLabel,
 					Tweak:       *publicComponent,
@@ -206,10 +169,35 @@ func MatchLabels(txOutput, pk [33]byte, labels []*bip352.Label) (*bip352.Label, 
 
 	for _, label := range labels {
 		// only check the first 8 bytes of actual pubkey
+		// todo: this function needs to be renamed for short or changed to do using full pubkeys again
 		if bytes.Equal(labelMatch[1:8+1], label.PubKey[1:8+1]) {
 			return label, nil
 		}
 	}
 
+	return nil, nil
+}
+
+func MatchLabelsOnShort(
+	txOutput [8]byte,
+	pk [32]byte,
+	labels []*bip352.Label,
+) (
+	*bip352.Label, error,
+) {
+	for i := range labels {
+		var pkInner [33]byte
+		pkInner[0] = 0x02
+		copy(pkInner[1:], pk[:])
+		potentialOutput, err := bip352.AddPublicKeys(&pkInner, &labels[i].PubKey)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal(txOutput[:8], potentialOutput[1:9]) {
+			return labels[i], err
+		}
+	}
+
+	// nothing found so nil label
 	return nil, nil
 }

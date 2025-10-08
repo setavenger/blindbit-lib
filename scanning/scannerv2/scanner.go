@@ -3,7 +3,6 @@ package scannerv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sync"
 
@@ -185,7 +184,7 @@ func (s *ScannerV2) Scan(
 					}
 					s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
 				}
-				fmt.Printf("Last scan height: %d\n", s.lastScanHeight)
+				logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
 			}
 		}
 	}()

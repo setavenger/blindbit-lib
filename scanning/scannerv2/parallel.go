@@ -3,7 +3,6 @@ package scannerv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sync"
 	"sync/atomic"
@@ -75,6 +74,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 			for {
 				select {
 				case <-ctx.Done():
+					// todo: do we want an error to be returned here
 					logging.L.Err(ctx.Err()).Msg("context done")
 					return
 				case blockData := <-workChan:
@@ -102,7 +102,9 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 								foundOutputs[j].Txid = [32]byte(computeIndexTxItem.Txid)
 							}
 							if s.utxosIncompleteChanCalled {
-								s.utxosIncompleteChan <- foundOutputs
+								for i := range foundOutputs {
+									s.utxosIncompleteChan <- foundOutputs[i]
+								}
 							}
 							for i := range foundOutputs {
 								foundOutputs[i].Height = uint32(blockData.BlockIdentifier.BlockHeight)
@@ -113,21 +115,16 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 								errChan <- err
 								return
 							}
-							fmt.Println("found utxos, bool:", s.utxosOwnedChanCalled)
 							if s.utxosOwnedChanCalled {
-								// for i := range ownedUTXOs {
-								// 	ownedUTXOs[i].Height = uint32(blockData.BlockIdentifier.BlockHeight)
-								// }
 								for i := range ownedUTXOs {
 									s.utxosOwnedChan <- ownedUTXOs[i]
 								}
 							}
-							fmt.Println("sent through")
 						}
 
 						s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
 					}
-					fmt.Printf("Last scan height: %d, backlog: %d\n", s.lastScanHeight, len(workChan))
+					logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
 				}
 			}
 		}()
@@ -146,7 +143,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 		// do nothing
 	}
 
-	fmt.Println("txCounter:", txCounter.Load())
+	logging.L.Trace().Msgf("txCounter: %d", txCounter.Load())
 
 	return nil
 }

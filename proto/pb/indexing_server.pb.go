@@ -21,895 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// FilterType defines the type of filter
-type FilterType int32
-
-const (
-	FilterType_FILTER_TYPE_UNSPECIFIED FilterType = 0
-	FilterType_FILTER_TYPE_SPENT       FilterType = 1
-	FilterType_FILTER_TYPE_NEW_UTXOS   FilterType = 2
-)
-
-// Enum value maps for FilterType.
-var (
-	FilterType_name = map[int32]string{
-		0: "FILTER_TYPE_UNSPECIFIED",
-		1: "FILTER_TYPE_SPENT",
-		2: "FILTER_TYPE_NEW_UTXOS",
-	}
-	FilterType_value = map[string]int32{
-		"FILTER_TYPE_UNSPECIFIED": 0,
-		"FILTER_TYPE_SPENT":       1,
-		"FILTER_TYPE_NEW_UTXOS":   2,
-	}
-)
-
-func (x FilterType) Enum() *FilterType {
-	p := new(FilterType)
-	*p = x
-	return p
-}
-
-func (x FilterType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (FilterType) Descriptor() protoreflect.EnumDescriptor {
-	return file_indexing_server_proto_enumTypes[0].Descriptor()
-}
-
-func (FilterType) Type() protoreflect.EnumType {
-	return &file_indexing_server_proto_enumTypes[0]
-}
-
-func (x FilterType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use FilterType.Descriptor instead.
-func (FilterType) EnumDescriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{0}
-}
-
-// BlockBatch contains all necessary information to find out if utxo is in a block
-// and which it is
-// To check which addtional information is necessary
-type BlockBatchFull struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier  *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Tweaks           [][]byte               `protobuf:"bytes,2,rep,name=tweaks,proto3" json:"tweaks,omitempty"` // Array of 33-byte tweak data
-	Utxos            []*UTXO                `protobuf:"bytes,3,rep,name=utxos,proto3" json:"utxos,omitempty"`   // Array of UTXOs
-	NewUtxosFilter   *FilterData            `protobuf:"bytes,4,opt,name=new_utxos_filter,json=newUtxosFilter,proto3" json:"new_utxos_filter,omitempty"`
-	SpentUtxosFilter *FilterData            `protobuf:"bytes,5,opt,name=spent_utxos_filter,json=spentUtxosFilter,proto3" json:"spent_utxos_filter,omitempty"`
-	SpentUtxos       [][]byte               `protobuf:"bytes,6,rep,name=spent_utxos,json=spentUtxos,proto3" json:"spent_utxos,omitempty"` // Array of 32-byte hashes
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *BlockBatchFull) Reset() {
-	*x = BlockBatchFull{}
-	mi := &file_indexing_server_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockBatchFull) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockBatchFull) ProtoMessage() {}
-
-func (x *BlockBatchFull) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockBatchFull.ProtoReflect.Descriptor instead.
-func (*BlockBatchFull) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *BlockBatchFull) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *BlockBatchFull) GetTweaks() [][]byte {
-	if x != nil {
-		return x.Tweaks
-	}
-	return nil
-}
-
-func (x *BlockBatchFull) GetUtxos() []*UTXO {
-	if x != nil {
-		return x.Utxos
-	}
-	return nil
-}
-
-func (x *BlockBatchFull) GetNewUtxosFilter() *FilterData {
-	if x != nil {
-		return x.NewUtxosFilter
-	}
-	return nil
-}
-
-func (x *BlockBatchFull) GetSpentUtxosFilter() *FilterData {
-	if x != nil {
-		return x.SpentUtxosFilter
-	}
-	return nil
-}
-
-func (x *BlockBatchFull) GetSpentUtxos() [][]byte {
-	if x != nil {
-		return x.SpentUtxos
-	}
-	return nil
-}
-
-// BlockBatchSlim contains the least necessary information to find out if a utxo is in a block
-// To check which addtional information is necessary
-type BlockBatchSlim struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier  *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Tweaks           [][]byte               `protobuf:"bytes,2,rep,name=tweaks,proto3" json:"tweaks,omitempty"` // Array of 33-byte tweak data
-	NewUtxosFilter   *FilterData            `protobuf:"bytes,3,opt,name=new_utxos_filter,json=newUtxosFilter,proto3" json:"new_utxos_filter,omitempty"`
-	SpentUtxosFilter *FilterData            `protobuf:"bytes,4,opt,name=spent_utxos_filter,json=spentUtxosFilter,proto3" json:"spent_utxos_filter,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *BlockBatchSlim) Reset() {
-	*x = BlockBatchSlim{}
-	mi := &file_indexing_server_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockBatchSlim) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockBatchSlim) ProtoMessage() {}
-
-func (x *BlockBatchSlim) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockBatchSlim.ProtoReflect.Descriptor instead.
-func (*BlockBatchSlim) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *BlockBatchSlim) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *BlockBatchSlim) GetTweaks() [][]byte {
-	if x != nil {
-		return x.Tweaks
-	}
-	return nil
-}
-
-func (x *BlockBatchSlim) GetNewUtxosFilter() *FilterData {
-	if x != nil {
-		return x.NewUtxosFilter
-	}
-	return nil
-}
-
-func (x *BlockBatchSlim) GetSpentUtxosFilter() *FilterData {
-	if x != nil {
-		return x.SpentUtxosFilter
-	}
-	return nil
-}
-
-type BlockIdentifier struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHash     []byte                 `protobuf:"bytes,1,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"` // 32 bytes
-	BlockHeight   uint64                 `protobuf:"varint,2,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlockIdentifier) Reset() {
-	*x = BlockIdentifier{}
-	mi := &file_indexing_server_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockIdentifier) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockIdentifier) ProtoMessage() {}
-
-func (x *BlockIdentifier) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockIdentifier.ProtoReflect.Descriptor instead.
-func (*BlockIdentifier) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *BlockIdentifier) GetBlockHash() []byte {
-	if x != nil {
-		return x.BlockHash
-	}
-	return nil
-}
-
-func (x *BlockIdentifier) GetBlockHeight() uint64 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-// TweakArray represents an array of tweaks for a block
-type TweakArray struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Tweaks          [][]byte               `protobuf:"bytes,2,rep,name=tweaks,proto3" json:"tweaks,omitempty"` // Array of 33-byte tweak data
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *TweakArray) Reset() {
-	*x = TweakArray{}
-	mi := &file_indexing_server_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TweakArray) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TweakArray) ProtoMessage() {}
-
-func (x *TweakArray) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TweakArray.ProtoReflect.Descriptor instead.
-func (*TweakArray) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *TweakArray) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *TweakArray) GetTweaks() [][]byte {
-	if x != nil {
-		return x.Tweaks
-	}
-	return nil
-}
-
-// UTXO represents an unspent transaction output
-type UTXO struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Txid          []byte                 `protobuf:"bytes,1,opt,name=txid,proto3" json:"txid,omitempty"` // 32 bytes
-	Vout          uint32                 `protobuf:"varint,2,opt,name=vout,proto3" json:"vout,omitempty"`
-	Value         uint64                 `protobuf:"varint,3,opt,name=value,proto3" json:"value,omitempty"`
-	ScriptPubKey  []byte                 `protobuf:"bytes,4,opt,name=script_pub_key,json=scriptPubKey,proto3" json:"script_pub_key,omitempty"` // Variable length
-	BlockHeight   uint64                 `protobuf:"varint,5,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	BlockHash     []byte                 `protobuf:"bytes,6,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"` // 32 bytes
-	Timestamp     uint64                 `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Spent         bool                   `protobuf:"varint,8,opt,name=spent,proto3" json:"spent,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UTXO) Reset() {
-	*x = UTXO{}
-	mi := &file_indexing_server_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UTXO) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UTXO) ProtoMessage() {}
-
-func (x *UTXO) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UTXO.ProtoReflect.Descriptor instead.
-func (*UTXO) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *UTXO) GetTxid() []byte {
-	if x != nil {
-		return x.Txid
-	}
-	return nil
-}
-
-func (x *UTXO) GetVout() uint32 {
-	if x != nil {
-		return x.Vout
-	}
-	return 0
-}
-
-func (x *UTXO) GetValue() uint64 {
-	if x != nil {
-		return x.Value
-	}
-	return 0
-}
-
-func (x *UTXO) GetScriptPubKey() []byte {
-	if x != nil {
-		return x.ScriptPubKey
-	}
-	return nil
-}
-
-func (x *UTXO) GetBlockHeight() uint64 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-func (x *UTXO) GetBlockHash() []byte {
-	if x != nil {
-		return x.BlockHash
-	}
-	return nil
-}
-
-func (x *UTXO) GetTimestamp() uint64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
-}
-
-func (x *UTXO) GetSpent() bool {
-	if x != nil {
-		return x.Spent
-	}
-	return false
-}
-
-// UTXOArray represents an array of UTXOs for a block
-type UTXOArrayResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Utxos           []*UTXO                `protobuf:"bytes,2,rep,name=utxos,proto3" json:"utxos,omitempty"` // Array of UTXOs
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *UTXOArrayResponse) Reset() {
-	*x = UTXOArrayResponse{}
-	mi := &file_indexing_server_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UTXOArrayResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UTXOArrayResponse) ProtoMessage() {}
-
-func (x *UTXOArrayResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UTXOArrayResponse.ProtoReflect.Descriptor instead.
-func (*UTXOArrayResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *UTXOArrayResponse) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *UTXOArrayResponse) GetUtxos() []*UTXO {
-	if x != nil {
-		return x.Utxos
-	}
-	return nil
-}
-
-// Filter represents a compact filter
-type FilterResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	FilterData      *FilterData            `protobuf:"bytes,2,opt,name=filter_data,json=filterData,proto3" json:"filter_data,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *FilterResponse) Reset() {
-	*x = FilterResponse{}
-	mi := &file_indexing_server_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FilterResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FilterResponse) ProtoMessage() {}
-
-func (x *FilterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FilterResponse.ProtoReflect.Descriptor instead.
-func (*FilterResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *FilterResponse) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *FilterResponse) GetFilterData() *FilterData {
-	if x != nil {
-		return x.FilterData
-	}
-	return nil
-}
-
-type FilterData struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Blockhash     []byte                 `protobuf:"bytes,1,opt,name=blockhash,proto3" json:"blockhash,omitempty"`
-	FilterType    FilterType             `protobuf:"varint,2,opt,name=filter_type,json=filterType,proto3,enum=blindbit.oracle.v1.FilterType" json:"filter_type,omitempty"`
-	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"` // Variable length filter data
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FilterData) Reset() {
-	*x = FilterData{}
-	mi := &file_indexing_server_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FilterData) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FilterData) ProtoMessage() {}
-
-func (x *FilterData) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FilterData.ProtoReflect.Descriptor instead.
-func (*FilterData) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *FilterData) GetBlockhash() []byte {
-	if x != nil {
-		return x.Blockhash
-	}
-	return nil
-}
-
-func (x *FilterData) GetFilterType() FilterType {
-	if x != nil {
-		return x.FilterType
-	}
-	return FilterType_FILTER_TYPE_UNSPECIFIED
-}
-
-func (x *FilterData) GetData() []byte {
-	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-// SpentOutpointsIndex represents the spent outpoints index for a block
-type SpentOutpointsIndexResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Data            [][]byte               `protobuf:"bytes,2,rep,name=data,proto3" json:"data,omitempty"` // Array of 32-byte hashes
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *SpentOutpointsIndexResponse) Reset() {
-	*x = SpentOutpointsIndexResponse{}
-	mi := &file_indexing_server_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SpentOutpointsIndexResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SpentOutpointsIndexResponse) ProtoMessage() {}
-
-func (x *SpentOutpointsIndexResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SpentOutpointsIndexResponse.ProtoReflect.Descriptor instead.
-func (*SpentOutpointsIndexResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *SpentOutpointsIndexResponse) GetBlockIdentifier() *BlockIdentifier {
-	if x != nil {
-		return x.BlockIdentifier
-	}
-	return nil
-}
-
-func (x *SpentOutpointsIndexResponse) GetData() [][]byte {
-	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-// BlockHeightRequest requests data for a specific block height
-type BlockHeightRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHeight   uint64                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlockHeightRequest) Reset() {
-	*x = BlockHeightRequest{}
-	mi := &file_indexing_server_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockHeightRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockHeightRequest) ProtoMessage() {}
-
-func (x *BlockHeightRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockHeightRequest.ProtoReflect.Descriptor instead.
-func (*BlockHeightRequest) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *BlockHeightRequest) GetBlockHeight() uint64 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-// BlockHeightRequest requests data for a specific block height
-type RangedBlockHeightRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Start         uint64                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
-	End           uint64                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RangedBlockHeightRequest) Reset() {
-	*x = RangedBlockHeightRequest{}
-	mi := &file_indexing_server_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RangedBlockHeightRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RangedBlockHeightRequest) ProtoMessage() {}
-
-func (x *RangedBlockHeightRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RangedBlockHeightRequest.ProtoReflect.Descriptor instead.
-func (*RangedBlockHeightRequest) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *RangedBlockHeightRequest) GetStart() uint64 {
-	if x != nil {
-		return x.Start
-	}
-	return 0
-}
-
-func (x *RangedBlockHeightRequest) GetEnd() uint64 {
-	if x != nil {
-		return x.End
-	}
-	return 0
-}
-
-// BlockHeightRequest requests data for a specific block height
-type RangedBlockHeightRequestFiltered struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Start         uint64                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
-	End           uint64                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
-	Dustlimit     uint64                 `protobuf:"varint,3,opt,name=dustlimit,proto3" json:"dustlimit,omitempty"`
-	CutThrough    bool                   `protobuf:"varint,4,opt,name=cut_through,json=cutThrough,proto3" json:"cut_through,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RangedBlockHeightRequestFiltered) Reset() {
-	*x = RangedBlockHeightRequestFiltered{}
-	mi := &file_indexing_server_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RangedBlockHeightRequestFiltered) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RangedBlockHeightRequestFiltered) ProtoMessage() {}
-
-func (x *RangedBlockHeightRequestFiltered) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RangedBlockHeightRequestFiltered.ProtoReflect.Descriptor instead.
-func (*RangedBlockHeightRequestFiltered) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *RangedBlockHeightRequestFiltered) GetStart() uint64 {
-	if x != nil {
-		return x.Start
-	}
-	return 0
-}
-
-func (x *RangedBlockHeightRequestFiltered) GetEnd() uint64 {
-	if x != nil {
-		return x.End
-	}
-	return 0
-}
-
-func (x *RangedBlockHeightRequestFiltered) GetDustlimit() uint64 {
-	if x != nil {
-		return x.Dustlimit
-	}
-	return 0
-}
-
-func (x *RangedBlockHeightRequestFiltered) GetCutThrough() bool {
-	if x != nil {
-		return x.CutThrough
-	}
-	return false
-}
-
-// BlockHeightResponse returns block height information
-type BlockHeightResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHeight   uint64                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlockHeightResponse) Reset() {
-	*x = BlockHeightResponse{}
-	mi := &file_indexing_server_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockHeightResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockHeightResponse) ProtoMessage() {}
-
-func (x *BlockHeightResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockHeightResponse.ProtoReflect.Descriptor instead.
-func (*BlockHeightResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *BlockHeightResponse) GetBlockHeight() uint64 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-// BlockHashResponse returns block hash information
-type BlockHashResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHash     []byte                 `protobuf:"bytes,1,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"` // 32 bytes
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlockHashResponse) Reset() {
-	*x = BlockHashResponse{}
-	mi := &file_indexing_server_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlockHashResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlockHashResponse) ProtoMessage() {}
-
-func (x *BlockHashResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlockHashResponse.ProtoReflect.Descriptor instead.
-func (*BlockHashResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *BlockHashResponse) GetBlockHash() []byte {
-	if x != nil {
-		return x.BlockHash
-	}
-	return nil
-}
-
 // InfoResponse returns oracle information
 type InfoResponse struct {
 	state                          protoimpl.MessageState `protogen:"open.v1"`
@@ -925,7 +36,7 @@ type InfoResponse struct {
 
 func (x *InfoResponse) Reset() {
 	*x = InfoResponse{}
-	mi := &file_indexing_server_proto_msgTypes[14]
+	mi := &file_indexing_server_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -937,7 +48,7 @@ func (x *InfoResponse) String() string {
 func (*InfoResponse) ProtoMessage() {}
 
 func (x *InfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[14]
+	mi := &file_indexing_server_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -950,7 +61,7 @@ func (x *InfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InfoResponse.ProtoReflect.Descriptor instead.
 func (*InfoResponse) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{14}
+	return file_indexing_server_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *InfoResponse) GetNetwork() string {
@@ -995,29 +106,30 @@ func (x *InfoResponse) GetTweaksCutThroughWithDustFilter() bool {
 	return false
 }
 
-type IndexShortOuts struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
-	Index           []*ComputeIndexTxItem  `protobuf:"bytes,2,rep,name=index,proto3" json:"index,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+// BlockIdentifier contains block hash and height information
+type BlockIdentifier struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockHash     []byte                 `protobuf:"bytes,1,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"` // 32 bytes
+	BlockHeight   uint64                 `protobuf:"varint,2,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *IndexShortOuts) Reset() {
-	*x = IndexShortOuts{}
-	mi := &file_indexing_server_proto_msgTypes[15]
+func (x *BlockIdentifier) Reset() {
+	*x = BlockIdentifier{}
+	mi := &file_indexing_server_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IndexShortOuts) String() string {
+func (x *BlockIdentifier) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IndexShortOuts) ProtoMessage() {}
+func (*BlockIdentifier) ProtoMessage() {}
 
-func (x *IndexShortOuts) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[15]
+func (x *BlockIdentifier) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1028,37 +140,409 @@ func (x *IndexShortOuts) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IndexShortOuts.ProtoReflect.Descriptor instead.
-func (*IndexShortOuts) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{15}
+// Deprecated: Use BlockIdentifier.ProtoReflect.Descriptor instead.
+func (*BlockIdentifier) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *IndexShortOuts) GetBlockIdentifier() *BlockIdentifier {
+func (x *BlockIdentifier) GetBlockHash() []byte {
+	if x != nil {
+		return x.BlockHash
+	}
+	return nil
+}
+
+func (x *BlockIdentifier) GetBlockHeight() uint64 {
+	if x != nil {
+		return x.BlockHeight
+	}
+	return 0
+}
+
+// BlockHeightRequest requests data for a specific block height
+type BlockHeightRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockHeight   uint64                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BlockHeightRequest) Reset() {
+	*x = BlockHeightRequest{}
+	mi := &file_indexing_server_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BlockHeightRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlockHeightRequest) ProtoMessage() {}
+
+func (x *BlockHeightRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlockHeightRequest.ProtoReflect.Descriptor instead.
+func (*BlockHeightRequest) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BlockHeightRequest) GetBlockHeight() uint64 {
+	if x != nil {
+		return x.BlockHeight
+	}
+	return 0
+}
+
+// BlockHeightResponse returns block height information
+type BlockHeightResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockHeight   uint64                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BlockHeightResponse) Reset() {
+	*x = BlockHeightResponse{}
+	mi := &file_indexing_server_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BlockHeightResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlockHeightResponse) ProtoMessage() {}
+
+func (x *BlockHeightResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlockHeightResponse.ProtoReflect.Descriptor instead.
+func (*BlockHeightResponse) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *BlockHeightResponse) GetBlockHeight() uint64 {
+	if x != nil {
+		return x.BlockHeight
+	}
+	return 0
+}
+
+// BlockHashResponse returns block hash information
+type BlockHashResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockHash     []byte                 `protobuf:"bytes,1,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"` // 32 bytes
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BlockHashResponse) Reset() {
+	*x = BlockHashResponse{}
+	mi := &file_indexing_server_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BlockHashResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlockHashResponse) ProtoMessage() {}
+
+func (x *BlockHashResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlockHashResponse.ProtoReflect.Descriptor instead.
+func (*BlockHashResponse) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *BlockHashResponse) GetBlockHash() []byte {
+	if x != nil {
+		return x.BlockHash
+	}
+	return nil
+}
+
+// IndexResponse is a generic response for any array of bytes with block identifier
+type IndexResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
+	Index           [][]byte               `protobuf:"bytes,2,rep,name=index,proto3" json:"index,omitempty"` // Array of bytes (size depends on endpoint: 33-byte tweaks, 8-byte pubkeys, etc.)
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *IndexResponse) Reset() {
+	*x = IndexResponse{}
+	mi := &file_indexing_server_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IndexResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IndexResponse) ProtoMessage() {}
+
+func (x *IndexResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IndexResponse.ProtoReflect.Descriptor instead.
+func (*IndexResponse) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *IndexResponse) GetBlockIdentifier() *BlockIdentifier {
 	if x != nil {
 		return x.BlockIdentifier
 	}
 	return nil
 }
 
-func (x *IndexShortOuts) GetIndex() []*ComputeIndexTxItem {
+func (x *IndexResponse) GetIndex() [][]byte {
 	if x != nil {
 		return x.Index
 	}
 	return nil
 }
 
+// UTXOItem represents a UTXO item as used in HTTP responses
+type UTXOItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Txid          []byte                 `protobuf:"bytes,1,opt,name=txid,proto3" json:"txid,omitempty"` // 32 bytes
+	Vout          uint32                 `protobuf:"varint,2,opt,name=vout,proto3" json:"vout,omitempty"`
+	Amount        uint64                 `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Pubkey        []byte                 `protobuf:"bytes,4,opt,name=pubkey,proto3" json:"pubkey,omitempty"` // 32 bytes (x-only pubkey)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UTXOItem) Reset() {
+	*x = UTXOItem{}
+	mi := &file_indexing_server_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UTXOItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UTXOItem) ProtoMessage() {}
+
+func (x *UTXOItem) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UTXOItem.ProtoReflect.Descriptor instead.
+func (*UTXOItem) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UTXOItem) GetTxid() []byte {
+	if x != nil {
+		return x.Txid
+	}
+	return nil
+}
+
+func (x *UTXOItem) GetVout() uint32 {
+	if x != nil {
+		return x.Vout
+	}
+	return 0
+}
+
+func (x *UTXOItem) GetAmount() uint64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *UTXOItem) GetPubkey() []byte {
+	if x != nil {
+		return x.Pubkey
+	}
+	return nil
+}
+
+// UTXOItemLight represents a lightweight UTXO item (without txid)
+type UTXOItemLight struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vout          uint32                 `protobuf:"varint,1,opt,name=vout,proto3" json:"vout,omitempty"`
+	Amount        uint64                 `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Pubkey        []byte                 `protobuf:"bytes,3,opt,name=pubkey,proto3" json:"pubkey,omitempty"` // 32 bytes (x-only pubkey)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UTXOItemLight) Reset() {
+	*x = UTXOItemLight{}
+	mi := &file_indexing_server_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UTXOItemLight) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UTXOItemLight) ProtoMessage() {}
+
+func (x *UTXOItemLight) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UTXOItemLight.ProtoReflect.Descriptor instead.
+func (*UTXOItemLight) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UTXOItemLight) GetVout() uint32 {
+	if x != nil {
+		return x.Vout
+	}
+	return 0
+}
+
+func (x *UTXOItemLight) GetAmount() uint64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *UTXOItemLight) GetPubkey() []byte {
+	if x != nil {
+		return x.Pubkey
+	}
+	return nil
+}
+
+// ComputeIndexResponse returns a compact transaction index with tweak mappings
+type ComputeIndexResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
+	Index           []*ComputeIndexTxItem  `protobuf:"bytes,2,rep,name=index,proto3" json:"index,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ComputeIndexResponse) Reset() {
+	*x = ComputeIndexResponse{}
+	mi := &file_indexing_server_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComputeIndexResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComputeIndexResponse) ProtoMessage() {}
+
+func (x *ComputeIndexResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComputeIndexResponse.ProtoReflect.Descriptor instead.
+func (*ComputeIndexResponse) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ComputeIndexResponse) GetBlockIdentifier() *BlockIdentifier {
+	if x != nil {
+		return x.BlockIdentifier
+	}
+	return nil
+}
+
+func (x *ComputeIndexResponse) GetIndex() []*ComputeIndexTxItem {
+	if x != nil {
+		return x.Index
+	}
+	return nil
+}
+
+// ComputeIndexTxItem contains compact information to probe if a txid could have an interesting new output
 type ComputeIndexTxItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Txid          []byte                 `protobuf:"bytes,1,opt,name=txid,proto3" json:"txid,omitempty"`
-	Tweak         []byte                 `protobuf:"bytes,2,opt,name=tweak,proto3" json:"tweak,omitempty"`
-	OutputsShort  []byte                 `protobuf:"bytes,3,opt,name=outputs_short,json=outputsShort,proto3" json:"outputs_short,omitempty"` // 8 byte outputs must be length mod 8 = 0
+	Txid          []byte                 `protobuf:"bytes,1,opt,name=txid,proto3" json:"txid,omitempty"`                                     // 32 bytes
+	Tweak         []byte                 `protobuf:"bytes,2,opt,name=tweak,proto3" json:"tweak,omitempty"`                                   // 33 bytes
+	OutputsShort  []byte                 `protobuf:"bytes,3,opt,name=outputs_short,json=outputsShort,proto3" json:"outputs_short,omitempty"` // Array of 8-byte shortened pubkeys
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ComputeIndexTxItem) Reset() {
 	*x = ComputeIndexTxItem{}
-	mi := &file_indexing_server_proto_msgTypes[16]
+	mi := &file_indexing_server_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1070,7 +554,7 @@ func (x *ComputeIndexTxItem) String() string {
 func (*ComputeIndexTxItem) ProtoMessage() {}
 
 func (x *ComputeIndexTxItem) ProtoReflect() protoreflect.Message {
-	mi := &file_indexing_server_proto_msgTypes[16]
+	mi := &file_indexing_server_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1083,7 +567,7 @@ func (x *ComputeIndexTxItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComputeIndexTxItem.ProtoReflect.Descriptor instead.
 func (*ComputeIndexTxItem) Descriptor() ([]byte, []int) {
-	return file_indexing_server_proto_rawDescGZIP(), []int{16}
+	return file_indexing_server_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ComputeIndexTxItem) GetTxid() []byte {
@@ -1107,74 +591,202 @@ func (x *ComputeIndexTxItem) GetOutputsShort() []byte {
 	return nil
 }
 
+// FullTxItem contains complete transaction information for Full Block endpoint
+type FullTxItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Txid          []byte                 `protobuf:"bytes,1,opt,name=txid,proto3" json:"txid,omitempty"`     // 32 bytes
+	Tweak         []byte                 `protobuf:"bytes,2,opt,name=tweak,proto3" json:"tweak,omitempty"`   // 33 bytes
+	Inputs        []byte                 `protobuf:"bytes,3,opt,name=inputs,proto3" json:"inputs,omitempty"` // Array of 36-byte outpoints
+	Utxos         []*UTXOItemLight       `protobuf:"bytes,4,rep,name=utxos,proto3" json:"utxos,omitempty"`   // Array of lightweight UTXO items
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FullTxItem) Reset() {
+	*x = FullTxItem{}
+	mi := &file_indexing_server_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FullTxItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FullTxItem) ProtoMessage() {}
+
+func (x *FullTxItem) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FullTxItem.ProtoReflect.Descriptor instead.
+func (*FullTxItem) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *FullTxItem) GetTxid() []byte {
+	if x != nil {
+		return x.Txid
+	}
+	return nil
+}
+
+func (x *FullTxItem) GetTweak() []byte {
+	if x != nil {
+		return x.Tweak
+	}
+	return nil
+}
+
+func (x *FullTxItem) GetInputs() []byte {
+	if x != nil {
+		return x.Inputs
+	}
+	return nil
+}
+
+func (x *FullTxItem) GetUtxos() []*UTXOItemLight {
+	if x != nil {
+		return x.Utxos
+	}
+	return nil
+}
+
+// FullBlockResponse returns complete block data with all transaction details
+type FullBlockResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	BlockIdentifier *BlockIdentifier       `protobuf:"bytes,1,opt,name=block_identifier,json=blockIdentifier,proto3" json:"block_identifier,omitempty"`
+	Index           []*FullTxItem          `protobuf:"bytes,2,rep,name=index,proto3" json:"index,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *FullBlockResponse) Reset() {
+	*x = FullBlockResponse{}
+	mi := &file_indexing_server_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FullBlockResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FullBlockResponse) ProtoMessage() {}
+
+func (x *FullBlockResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FullBlockResponse.ProtoReflect.Descriptor instead.
+func (*FullBlockResponse) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *FullBlockResponse) GetBlockIdentifier() *BlockIdentifier {
+	if x != nil {
+		return x.BlockIdentifier
+	}
+	return nil
+}
+
+func (x *FullBlockResponse) GetIndex() []*FullTxItem {
+	if x != nil {
+		return x.Index
+	}
+	return nil
+}
+
+// RangedBlockHeightRequestFiltered requests filtered data for a range of block heights
+type RangedBlockHeightRequestFiltered struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Start         uint64                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
+	End           uint64                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
+	Dustlimit     uint64                 `protobuf:"varint,3,opt,name=dustlimit,proto3" json:"dustlimit,omitempty"`
+	CutThrough    bool                   `protobuf:"varint,4,opt,name=cut_through,json=cutThrough,proto3" json:"cut_through,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RangedBlockHeightRequestFiltered) Reset() {
+	*x = RangedBlockHeightRequestFiltered{}
+	mi := &file_indexing_server_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RangedBlockHeightRequestFiltered) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RangedBlockHeightRequestFiltered) ProtoMessage() {}
+
+func (x *RangedBlockHeightRequestFiltered) ProtoReflect() protoreflect.Message {
+	mi := &file_indexing_server_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RangedBlockHeightRequestFiltered.ProtoReflect.Descriptor instead.
+func (*RangedBlockHeightRequestFiltered) Descriptor() ([]byte, []int) {
+	return file_indexing_server_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RangedBlockHeightRequestFiltered) GetStart() uint64 {
+	if x != nil {
+		return x.Start
+	}
+	return 0
+}
+
+func (x *RangedBlockHeightRequestFiltered) GetEnd() uint64 {
+	if x != nil {
+		return x.End
+	}
+	return 0
+}
+
+func (x *RangedBlockHeightRequestFiltered) GetDustlimit() uint64 {
+	if x != nil {
+		return x.Dustlimit
+	}
+	return 0
+}
+
+func (x *RangedBlockHeightRequestFiltered) GetCutThrough() bool {
+	if x != nil {
+		return x.CutThrough
+	}
+	return false
+}
+
 var File_indexing_server_proto protoreflect.FileDescriptor
 
 const file_indexing_server_proto_rawDesc = "" +
 	"\n" +
-	"\x15indexing_server.proto\x12\x12blindbit.oracle.v1\"\xe1\x02\n" +
-	"\x0eBlockBatchFull\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12\x16\n" +
-	"\x06tweaks\x18\x02 \x03(\fR\x06tweaks\x12.\n" +
-	"\x05utxos\x18\x03 \x03(\v2\x18.blindbit.oracle.v1.UTXOR\x05utxos\x12H\n" +
-	"\x10new_utxos_filter\x18\x04 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\x0enewUtxosFilter\x12L\n" +
-	"\x12spent_utxos_filter\x18\x05 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\x10spentUtxosFilter\x12\x1f\n" +
-	"\vspent_utxos\x18\x06 \x03(\fR\n" +
-	"spentUtxos\"\x90\x02\n" +
-	"\x0eBlockBatchSlim\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12\x16\n" +
-	"\x06tweaks\x18\x02 \x03(\fR\x06tweaks\x12H\n" +
-	"\x10new_utxos_filter\x18\x03 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\x0enewUtxosFilter\x12L\n" +
-	"\x12spent_utxos_filter\x18\x04 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\x10spentUtxosFilter\"S\n" +
-	"\x0fBlockIdentifier\x12\x1d\n" +
-	"\n" +
-	"block_hash\x18\x01 \x01(\fR\tblockHash\x12!\n" +
-	"\fblock_height\x18\x02 \x01(\x04R\vblockHeight\"t\n" +
-	"\n" +
-	"TweakArray\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12\x16\n" +
-	"\x06tweaks\x18\x02 \x03(\fR\x06tweaks\"\xe0\x01\n" +
-	"\x04UTXO\x12\x12\n" +
-	"\x04txid\x18\x01 \x01(\fR\x04txid\x12\x12\n" +
-	"\x04vout\x18\x02 \x01(\rR\x04vout\x12\x14\n" +
-	"\x05value\x18\x03 \x01(\x04R\x05value\x12$\n" +
-	"\x0escript_pub_key\x18\x04 \x01(\fR\fscriptPubKey\x12!\n" +
-	"\fblock_height\x18\x05 \x01(\x04R\vblockHeight\x12\x1d\n" +
-	"\n" +
-	"block_hash\x18\x06 \x01(\fR\tblockHash\x12\x1c\n" +
-	"\ttimestamp\x18\a \x01(\x04R\ttimestamp\x12\x14\n" +
-	"\x05spent\x18\b \x01(\bR\x05spent\"\x93\x01\n" +
-	"\x11UTXOArrayResponse\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12.\n" +
-	"\x05utxos\x18\x02 \x03(\v2\x18.blindbit.oracle.v1.UTXOR\x05utxos\"\xa1\x01\n" +
-	"\x0eFilterResponse\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12?\n" +
-	"\vfilter_data\x18\x02 \x01(\v2\x1e.blindbit.oracle.v1.FilterDataR\n" +
-	"filterData\"\x7f\n" +
-	"\n" +
-	"FilterData\x12\x1c\n" +
-	"\tblockhash\x18\x01 \x01(\fR\tblockhash\x12?\n" +
-	"\vfilter_type\x18\x02 \x01(\x0e2\x1e.blindbit.oracle.v1.FilterTypeR\n" +
-	"filterType\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\"\x81\x01\n" +
-	"\x1bSpentOutpointsIndexResponse\x12N\n" +
-	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12\x12\n" +
-	"\x04data\x18\x02 \x03(\fR\x04data\"7\n" +
-	"\x12BlockHeightRequest\x12!\n" +
-	"\fblock_height\x18\x01 \x01(\x04R\vblockHeight\"B\n" +
-	"\x18RangedBlockHeightRequest\x12\x14\n" +
-	"\x05start\x18\x01 \x01(\x04R\x05start\x12\x10\n" +
-	"\x03end\x18\x02 \x01(\x04R\x03end\"\x89\x01\n" +
-	" RangedBlockHeightRequestFiltered\x12\x14\n" +
-	"\x05start\x18\x01 \x01(\x04R\x05start\x12\x10\n" +
-	"\x03end\x18\x02 \x01(\x04R\x03end\x12\x1c\n" +
-	"\tdustlimit\x18\x03 \x01(\x04R\tdustlimit\x12\x1f\n" +
-	"\vcut_through\x18\x04 \x01(\bR\n" +
-	"cutThrough\"8\n" +
-	"\x13BlockHeightResponse\x12!\n" +
-	"\fblock_height\x18\x01 \x01(\x04R\vblockHeight\"2\n" +
-	"\x11BlockHashResponse\x12\x1d\n" +
-	"\n" +
-	"block_hash\x18\x01 \x01(\fR\tblockHash\"\x9a\x02\n" +
+	"\x15indexing_server.proto\x12\x12blindbit.oracle.v1\"\x9a\x02\n" +
 	"\fInfoResponse\x12\x18\n" +
 	"\anetwork\x18\x01 \x01(\tR\anetwork\x12\x16\n" +
 	"\x06height\x18\x02 \x01(\x04R\x06height\x12\x1f\n" +
@@ -1182,19 +794,52 @@ const file_indexing_server_proto_rawDesc = "" +
 	"tweaksOnly\x12*\n" +
 	"\x11tweaks_full_basic\x18\x04 \x01(\bR\x0ftweaksFullBasic\x12>\n" +
 	"\x1ctweaks_full_with_dust_filter\x18\x05 \x01(\bR\x18tweaksFullWithDustFilter\x12K\n" +
-	"#tweaks_cut_through_with_dust_filter\x18\x06 \x01(\bR\x1etweaksCutThroughWithDustFilter\"\x9e\x01\n" +
-	"\x0eIndexShortOuts\x12N\n" +
+	"#tweaks_cut_through_with_dust_filter\x18\x06 \x01(\bR\x1etweaksCutThroughWithDustFilter\"S\n" +
+	"\x0fBlockIdentifier\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\x01 \x01(\fR\tblockHash\x12!\n" +
+	"\fblock_height\x18\x02 \x01(\x04R\vblockHeight\"7\n" +
+	"\x12BlockHeightRequest\x12!\n" +
+	"\fblock_height\x18\x01 \x01(\x04R\vblockHeight\"8\n" +
+	"\x13BlockHeightResponse\x12!\n" +
+	"\fblock_height\x18\x01 \x01(\x04R\vblockHeight\"2\n" +
+	"\x11BlockHashResponse\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\x01 \x01(\fR\tblockHash\"u\n" +
+	"\rIndexResponse\x12N\n" +
+	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12\x14\n" +
+	"\x05index\x18\x02 \x03(\fR\x05index\"b\n" +
+	"\bUTXOItem\x12\x12\n" +
+	"\x04txid\x18\x01 \x01(\fR\x04txid\x12\x12\n" +
+	"\x04vout\x18\x02 \x01(\rR\x04vout\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\x04R\x06amount\x12\x16\n" +
+	"\x06pubkey\x18\x04 \x01(\fR\x06pubkey\"S\n" +
+	"\rUTXOItemLight\x12\x12\n" +
+	"\x04vout\x18\x01 \x01(\rR\x04vout\x12\x16\n" +
+	"\x06amount\x18\x02 \x01(\x04R\x06amount\x12\x16\n" +
+	"\x06pubkey\x18\x03 \x01(\fR\x06pubkey\"\xa4\x01\n" +
+	"\x14ComputeIndexResponse\x12N\n" +
 	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x12<\n" +
 	"\x05index\x18\x02 \x03(\v2&.blindbit.oracle.v1.ComputeIndexTxItemR\x05index\"c\n" +
 	"\x12ComputeIndexTxItem\x12\x12\n" +
 	"\x04txid\x18\x01 \x01(\fR\x04txid\x12\x14\n" +
 	"\x05tweak\x18\x02 \x01(\fR\x05tweak\x12#\n" +
-	"\routputs_short\x18\x03 \x01(\fR\foutputsShort*[\n" +
+	"\routputs_short\x18\x03 \x01(\fR\foutputsShort\"\x87\x01\n" +
 	"\n" +
-	"FilterType\x12\x1b\n" +
-	"\x17FILTER_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
-	"\x11FILTER_TYPE_SPENT\x10\x01\x12\x19\n" +
-	"\x15FILTER_TYPE_NEW_UTXOS\x10\x02B\x06Z\x04./pbb\x06proto3"
+	"FullTxItem\x12\x12\n" +
+	"\x04txid\x18\x01 \x01(\fR\x04txid\x12\x14\n" +
+	"\x05tweak\x18\x02 \x01(\fR\x05tweak\x12\x16\n" +
+	"\x06inputs\x18\x03 \x01(\fR\x06inputs\x127\n" +
+	"\x05utxos\x18\x04 \x03(\v2!.blindbit.oracle.v1.UTXOItemLightR\x05utxos\"\x99\x01\n" +
+	"\x11FullBlockResponse\x12N\n" +
+	"\x10block_identifier\x18\x01 \x01(\v2#.blindbit.oracle.v1.BlockIdentifierR\x0fblockIdentifier\x124\n" +
+	"\x05index\x18\x02 \x03(\v2\x1e.blindbit.oracle.v1.FullTxItemR\x05index\"\x89\x01\n" +
+	" RangedBlockHeightRequestFiltered\x12\x14\n" +
+	"\x05start\x18\x01 \x01(\x04R\x05start\x12\x10\n" +
+	"\x03end\x18\x02 \x01(\x04R\x03end\x12\x1c\n" +
+	"\tdustlimit\x18\x03 \x01(\x04R\tdustlimit\x12\x1f\n" +
+	"\vcut_through\x18\x04 \x01(\bR\n" +
+	"cutThroughB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_indexing_server_proto_rawDescOnce sync.Once
@@ -1208,50 +853,34 @@ func file_indexing_server_proto_rawDescGZIP() []byte {
 	return file_indexing_server_proto_rawDescData
 }
 
-var file_indexing_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_indexing_server_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_indexing_server_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_indexing_server_proto_goTypes = []any{
-	(FilterType)(0),                          // 0: blindbit.oracle.v1.FilterType
-	(*BlockBatchFull)(nil),                   // 1: blindbit.oracle.v1.BlockBatchFull
-	(*BlockBatchSlim)(nil),                   // 2: blindbit.oracle.v1.BlockBatchSlim
-	(*BlockIdentifier)(nil),                  // 3: blindbit.oracle.v1.BlockIdentifier
-	(*TweakArray)(nil),                       // 4: blindbit.oracle.v1.TweakArray
-	(*UTXO)(nil),                             // 5: blindbit.oracle.v1.UTXO
-	(*UTXOArrayResponse)(nil),                // 6: blindbit.oracle.v1.UTXOArrayResponse
-	(*FilterResponse)(nil),                   // 7: blindbit.oracle.v1.FilterResponse
-	(*FilterData)(nil),                       // 8: blindbit.oracle.v1.FilterData
-	(*SpentOutpointsIndexResponse)(nil),      // 9: blindbit.oracle.v1.SpentOutpointsIndexResponse
-	(*BlockHeightRequest)(nil),               // 10: blindbit.oracle.v1.BlockHeightRequest
-	(*RangedBlockHeightRequest)(nil),         // 11: blindbit.oracle.v1.RangedBlockHeightRequest
+	(*InfoResponse)(nil),                     // 0: blindbit.oracle.v1.InfoResponse
+	(*BlockIdentifier)(nil),                  // 1: blindbit.oracle.v1.BlockIdentifier
+	(*BlockHeightRequest)(nil),               // 2: blindbit.oracle.v1.BlockHeightRequest
+	(*BlockHeightResponse)(nil),              // 3: blindbit.oracle.v1.BlockHeightResponse
+	(*BlockHashResponse)(nil),                // 4: blindbit.oracle.v1.BlockHashResponse
+	(*IndexResponse)(nil),                    // 5: blindbit.oracle.v1.IndexResponse
+	(*UTXOItem)(nil),                         // 6: blindbit.oracle.v1.UTXOItem
+	(*UTXOItemLight)(nil),                    // 7: blindbit.oracle.v1.UTXOItemLight
+	(*ComputeIndexResponse)(nil),             // 8: blindbit.oracle.v1.ComputeIndexResponse
+	(*ComputeIndexTxItem)(nil),               // 9: blindbit.oracle.v1.ComputeIndexTxItem
+	(*FullTxItem)(nil),                       // 10: blindbit.oracle.v1.FullTxItem
+	(*FullBlockResponse)(nil),                // 11: blindbit.oracle.v1.FullBlockResponse
 	(*RangedBlockHeightRequestFiltered)(nil), // 12: blindbit.oracle.v1.RangedBlockHeightRequestFiltered
-	(*BlockHeightResponse)(nil),              // 13: blindbit.oracle.v1.BlockHeightResponse
-	(*BlockHashResponse)(nil),                // 14: blindbit.oracle.v1.BlockHashResponse
-	(*InfoResponse)(nil),                     // 15: blindbit.oracle.v1.InfoResponse
-	(*IndexShortOuts)(nil),                   // 16: blindbit.oracle.v1.IndexShortOuts
-	(*ComputeIndexTxItem)(nil),               // 17: blindbit.oracle.v1.ComputeIndexTxItem
 }
 var file_indexing_server_proto_depIdxs = []int32{
-	3,  // 0: blindbit.oracle.v1.BlockBatchFull.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	5,  // 1: blindbit.oracle.v1.BlockBatchFull.utxos:type_name -> blindbit.oracle.v1.UTXO
-	8,  // 2: blindbit.oracle.v1.BlockBatchFull.new_utxos_filter:type_name -> blindbit.oracle.v1.FilterData
-	8,  // 3: blindbit.oracle.v1.BlockBatchFull.spent_utxos_filter:type_name -> blindbit.oracle.v1.FilterData
-	3,  // 4: blindbit.oracle.v1.BlockBatchSlim.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	8,  // 5: blindbit.oracle.v1.BlockBatchSlim.new_utxos_filter:type_name -> blindbit.oracle.v1.FilterData
-	8,  // 6: blindbit.oracle.v1.BlockBatchSlim.spent_utxos_filter:type_name -> blindbit.oracle.v1.FilterData
-	3,  // 7: blindbit.oracle.v1.TweakArray.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	3,  // 8: blindbit.oracle.v1.UTXOArrayResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	5,  // 9: blindbit.oracle.v1.UTXOArrayResponse.utxos:type_name -> blindbit.oracle.v1.UTXO
-	3,  // 10: blindbit.oracle.v1.FilterResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	8,  // 11: blindbit.oracle.v1.FilterResponse.filter_data:type_name -> blindbit.oracle.v1.FilterData
-	0,  // 12: blindbit.oracle.v1.FilterData.filter_type:type_name -> blindbit.oracle.v1.FilterType
-	3,  // 13: blindbit.oracle.v1.SpentOutpointsIndexResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	3,  // 14: blindbit.oracle.v1.IndexShortOuts.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
-	17, // 15: blindbit.oracle.v1.IndexShortOuts.index:type_name -> blindbit.oracle.v1.ComputeIndexTxItem
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	1,  // 0: blindbit.oracle.v1.IndexResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
+	1,  // 1: blindbit.oracle.v1.ComputeIndexResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
+	9,  // 2: blindbit.oracle.v1.ComputeIndexResponse.index:type_name -> blindbit.oracle.v1.ComputeIndexTxItem
+	7,  // 3: blindbit.oracle.v1.FullTxItem.utxos:type_name -> blindbit.oracle.v1.UTXOItemLight
+	1,  // 4: blindbit.oracle.v1.FullBlockResponse.block_identifier:type_name -> blindbit.oracle.v1.BlockIdentifier
+	10, // 5: blindbit.oracle.v1.FullBlockResponse.index:type_name -> blindbit.oracle.v1.FullTxItem
+	6,  // [6:6] is the sub-list for method output_type
+	6,  // [6:6] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_indexing_server_proto_init() }
@@ -1264,14 +893,13 @@ func file_indexing_server_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_indexing_server_proto_rawDesc), len(file_indexing_server_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   17,
+			NumEnums:      0,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_indexing_server_proto_goTypes,
 		DependencyIndexes: file_indexing_server_proto_depIdxs,
-		EnumInfos:         file_indexing_server_proto_enumTypes,
 		MessageInfos:      file_indexing_server_proto_msgTypes,
 	}.Build()
 	File_indexing_server_proto = out.File

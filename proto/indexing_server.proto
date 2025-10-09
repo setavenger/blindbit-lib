@@ -4,98 +4,25 @@ package blindbit.oracle.v1;
 
 option go_package = "./pb";
 
-// BlockBatch contains all necessary information to find out if utxo is in a block
-// and which it is
-// To check which addtional information is necessary
-message BlockBatchFull {
-  BlockIdentifier block_identifier = 1;
-  repeated bytes tweaks = 2; // Array of 33-byte tweak data
-  repeated UTXO utxos = 3;  // Array of UTXOs
-  FilterData new_utxos_filter = 4;
-  FilterData spent_utxos_filter = 5;
-  repeated bytes spent_utxos = 6;  // Array of 32-byte hashes
+// InfoResponse returns oracle information
+message InfoResponse {
+  string network = 1;
+  uint64 height = 2;
+  bool tweaks_only = 3;
+  bool tweaks_full_basic = 4;
+  bool tweaks_full_with_dust_filter = 5;
+  bool tweaks_cut_through_with_dust_filter = 6;
 }
 
-// BlockBatchSlim contains the least necessary information to find out if a utxo is in a block
-// To check which addtional information is necessary
-message BlockBatchSlim {
-  BlockIdentifier block_identifier = 1;
-  repeated bytes tweaks = 2; // Array of 33-byte tweak data
-  FilterData new_utxos_filter = 3;
-  FilterData spent_utxos_filter = 4;
-}
-
+// BlockIdentifier contains block hash and height information
 message BlockIdentifier {
   bytes block_hash = 1;  // 32 bytes
   uint64 block_height = 2;
 }
 
-// TweakArray represents an array of tweaks for a block
-message TweakArray {
-  BlockIdentifier block_identifier = 1;
-  repeated bytes tweaks = 2; // Array of 33-byte tweak data
-}
-
-// UTXO represents an unspent transaction output
-message UTXO {
-  bytes txid = 1;           // 32 bytes
-  uint32 vout = 2;
-  uint64 value = 3;
-  bytes script_pub_key = 4; // Variable length
-  uint64 block_height = 5;
-  bytes block_hash = 6;     // 32 bytes
-  uint64 timestamp = 7;
-  bool spent = 8;
-}
-
-// UTXOArray represents an array of UTXOs for a block
-message UTXOArrayResponse {
-  BlockIdentifier block_identifier = 1;
-  repeated UTXO utxos = 2;  // Array of UTXOs
-}
-
-// Filter represents a compact filter
-message FilterResponse {
-  BlockIdentifier block_identifier = 1;
-  FilterData filter_data = 2;
-}
-
-message FilterData {
-  bytes blockhash = 1;
-  FilterType filter_type = 2;
-  bytes data = 3;           // Variable length filter data
-}
-
-// SpentOutpointsIndex represents the spent outpoints index for a block
-message SpentOutpointsIndexResponse {
-  BlockIdentifier block_identifier = 1;
-  repeated bytes data = 2;  // Array of 32-byte hashes
-}
-
-// FilterType defines the type of filter
-enum FilterType {
-  FILTER_TYPE_UNSPECIFIED = 0;
-  FILTER_TYPE_SPENT = 1;
-  FILTER_TYPE_NEW_UTXOS = 2;
-}
-
 // BlockHeightRequest requests data for a specific block height
 message BlockHeightRequest {
   uint64 block_height = 1;
-}
-
-// BlockHeightRequest requests data for a specific block height
-message RangedBlockHeightRequest {
-  uint64 start = 1;
-  uint64 end = 2;
-}
-
-// BlockHeightRequest requests data for a specific block height
-message RangedBlockHeightRequestFiltered {
-  uint64 start = 1;
-  uint64 end = 2;
-  uint64 dustlimit = 3;
-  bool cut_through = 4;
 }
 
 // BlockHeightResponse returns block height information
@@ -108,23 +35,58 @@ message BlockHashResponse {
   bytes block_hash = 1;     // 32 bytes
 }
 
-// InfoResponse returns oracle information
-message InfoResponse {
-  string network = 1;
-  uint64 height = 2;
-  bool tweaks_only = 3;
-  bool tweaks_full_basic = 4;
-  bool tweaks_full_with_dust_filter = 5;
-  bool tweaks_cut_through_with_dust_filter = 6;
+// IndexResponse is a generic response for any array of bytes with block identifier
+message IndexResponse {
+  BlockIdentifier block_identifier = 1;
+  repeated bytes index = 2; // Array of bytes (size depends on endpoint: 33-byte tweaks, 8-byte pubkeys, etc.)
 }
 
-message IndexShortOuts {
+// UTXOItem represents a UTXO item as used in HTTP responses
+message UTXOItem {
+  bytes txid = 1;           // 32 bytes
+  uint32 vout = 2;
+  uint64 amount = 3;
+  bytes pubkey = 4;         // 32 bytes (x-only pubkey)
+}
+
+// UTXOItemLight represents a lightweight UTXO item (without txid)
+message UTXOItemLight {
+  uint32 vout = 1;
+  uint64 amount = 2;
+  bytes pubkey = 3;         // 32 bytes (x-only pubkey)
+}
+
+// ComputeIndexResponse returns a compact transaction index with tweak mappings
+message ComputeIndexResponse {
   BlockIdentifier block_identifier = 1;
   repeated ComputeIndexTxItem index = 2;
 }
 
+// ComputeIndexTxItem contains compact information to probe if a txid could have an interesting new output
 message ComputeIndexTxItem {
-  bytes txid = 1;
-  bytes tweak = 2;
-  bytes outputs_short = 3; // 8 byte outputs must be length mod 8 = 0
+  bytes txid = 1;           // 32 bytes
+  bytes tweak = 2;          // 33 bytes
+  bytes outputs_short = 3; // Array of 8-byte shortened pubkeys
+}
+
+// FullTxItem contains complete transaction information for Full Block endpoint
+message FullTxItem {
+  bytes txid = 1;                    // 32 bytes
+  bytes tweak = 2;                   // 33 bytes
+  bytes inputs = 3;                  // Array of 36-byte outpoints
+  repeated UTXOItemLight utxos = 4;  // Array of lightweight UTXO items
+}
+
+// FullBlockResponse returns complete block data with all transaction details
+message FullBlockResponse {
+  BlockIdentifier block_identifier = 1;
+  repeated FullTxItem index = 2;
+}
+
+// RangedBlockHeightRequestFiltered requests filtered data for a range of block heights
+message RangedBlockHeightRequestFiltered {
+  uint64 start = 1;
+  uint64 end = 2;
+  uint64 dustlimit = 3;
+  bool cut_through = 4;
 }

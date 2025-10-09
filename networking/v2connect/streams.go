@@ -30,26 +30,16 @@ func (c *OracleClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *OracleClient) StreamBlockBatchFull(
-	ctx context.Context, request *pb.RangedBlockHeightRequest,
-) (
-	pb.OracleService_StreamBlockBatchFullClient, error,
-) {
-	return c.client.StreamBlockBatchFull(ctx, request)
+func (c *OracleClient) GetFullBlock(
+	ctx context.Context, request *pb.BlockHeightRequest,
+) (*pb.FullBlockResponse, error) {
+	return c.client.GetFullBlock(ctx, request)
 }
 
-func (c *OracleClient) StreamBlockBatchFullStatic(
-	ctx context.Context, request *pb.RangedBlockHeightRequest,
-) (
-	pb.OracleService_StreamBlockBatchFullStaticClient, error,
-) {
-	return c.client.StreamBlockBatchFullStatic(ctx, request)
-}
-
-func (c *OracleClient) StreamIndexShortOuts(
+func (c *OracleClient) StreamComputeIndex(
 	ctx context.Context, request *pb.RangedBlockHeightRequestFiltered,
 ) (
-	pb.OracleService_StreamIndexShortOutsClient, error,
+	pb.OracleService_StreamComputeIndexClient, error,
 ) {
-	return c.client.StreamIndexShortOuts(ctx, request)
+	return c.client.StreamComputeIndex(ctx, request)
 }

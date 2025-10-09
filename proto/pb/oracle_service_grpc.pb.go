@@ -20,50 +20,27 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	OracleService_StreamBlockBatchSlim_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlim"
-	OracleService_StreamBlockBatchFull_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFull"
-	OracleService_StreamBlockBatchSlimStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchSlimStatic"
-	OracleService_StreamBlockBatchFullStatic_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockBatchFullStatic"
-	OracleService_StreamIndexShortOuts_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamIndexShortOuts"
-	OracleService_GetTweakArray_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetTweakArray"
-	OracleService_GetTweakIndexArray_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetTweakIndexArray"
-	OracleService_GetUTXOArray_FullMethodName               = "/blindbit.oracle.v1.OracleService/GetUTXOArray"
-	OracleService_GetFilter_FullMethodName                  = "/blindbit.oracle.v1.OracleService/GetFilter"
-	OracleService_GetSpentOutpointsIndex_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetSpentOutpointsIndex"
-	OracleService_GetInfo_FullMethodName                    = "/blindbit.oracle.v1.OracleService/GetInfo"
-	OracleService_GetBestBlockHeight_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
-	OracleService_GetBlockHashByHeight_FullMethodName       = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
+	OracleService_GetInfo_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetInfo"
+	OracleService_GetBestBlockHeight_FullMethodName   = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
+	OracleService_GetBlockHashByHeight_FullMethodName = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
+	OracleService_StreamComputeIndex_FullMethodName   = "/blindbit.oracle.v1.OracleService/StreamComputeIndex"
+	OracleService_GetFullBlock_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetFullBlock"
 )
 
 // OracleServiceClient is the client API for OracleService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OracleServiceClient interface {
-	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
-	StreamBlockBatchSlim(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimClient, error)
-	// StreamBlockBatchFull streams complete block batches with all data
-	StreamBlockBatchFull(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullClient, error)
-	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
-	StreamBlockBatchSlimStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimStaticClient, error)
-	// StreamBlockBatchFull streams complete block batches with all data
-	StreamBlockBatchFullStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullStaticClient, error)
-	StreamIndexShortOuts(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamIndexShortOutsClient, error)
-	// GetTweakArray returns tweaks for a specific block height
-	GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error)
-	// GetTweakIndexArray returns tweak index data for a specific block height
-	GetTweakIndexArray(ctx context.Context, in *GetTweakIndexRequest, opts ...grpc.CallOption) (*TweakArray, error)
-	// GetUTXOArray returns UTXOs for a specific block height
-	GetUTXOArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*UTXOArrayResponse, error)
-	// GetFilter returns filter data for a specific block height and type
-	GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterResponse, error)
-	// GetSpentOutpointsIndex returns spent outpoints index for a specific block height
-	GetSpentOutpointsIndex(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*SpentOutpointsIndexResponse, error)
 	// GetInfo returns oracle information
 	GetInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoResponse, error)
 	// GetBestBlockHeight returns the current best block height
 	GetBestBlockHeight(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BlockHeightResponse, error)
 	// GetBlockHashByHeight returns the block hash for a given height
 	GetBlockHashByHeight(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*BlockHashResponse, error)
+	// Stream the compute index for a given range
+	StreamComputeIndex(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamComputeIndexClient, error)
+	// Get a full block with full information for the block
+	GetFullBlock(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*FullBlockResponse, error)
 }
 
 type oracleServiceClient struct {
@@ -72,211 +49,6 @@ type oracleServiceClient struct {
 
 func NewOracleServiceClient(cc grpc.ClientConnInterface) OracleServiceClient {
 	return &oracleServiceClient{cc}
-}
-
-func (c *oracleServiceClient) StreamBlockBatchSlim(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[0], OracleService_StreamBlockBatchSlim_FullMethodName, opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &oracleServiceStreamBlockBatchSlimClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type OracleService_StreamBlockBatchSlimClient interface {
-	Recv() (*BlockBatchSlim, error)
-	grpc.ClientStream
-}
-
-type oracleServiceStreamBlockBatchSlimClient struct {
-	grpc.ClientStream
-}
-
-func (x *oracleServiceStreamBlockBatchSlimClient) Recv() (*BlockBatchSlim, error) {
-	m := new(BlockBatchSlim)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *oracleServiceClient) StreamBlockBatchFull(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[1], OracleService_StreamBlockBatchFull_FullMethodName, opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &oracleServiceStreamBlockBatchFullClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type OracleService_StreamBlockBatchFullClient interface {
-	Recv() (*BlockBatchFull, error)
-	grpc.ClientStream
-}
-
-type oracleServiceStreamBlockBatchFullClient struct {
-	grpc.ClientStream
-}
-
-func (x *oracleServiceStreamBlockBatchFullClient) Recv() (*BlockBatchFull, error) {
-	m := new(BlockBatchFull)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *oracleServiceClient) StreamBlockBatchSlimStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchSlimStaticClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[2], OracleService_StreamBlockBatchSlimStatic_FullMethodName, opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &oracleServiceStreamBlockBatchSlimStaticClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type OracleService_StreamBlockBatchSlimStaticClient interface {
-	Recv() (*BlockBatchSlim, error)
-	grpc.ClientStream
-}
-
-type oracleServiceStreamBlockBatchSlimStaticClient struct {
-	grpc.ClientStream
-}
-
-func (x *oracleServiceStreamBlockBatchSlimStaticClient) Recv() (*BlockBatchSlim, error) {
-	m := new(BlockBatchSlim)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *oracleServiceClient) StreamBlockBatchFullStatic(ctx context.Context, in *RangedBlockHeightRequest, opts ...grpc.CallOption) (OracleService_StreamBlockBatchFullStaticClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[3], OracleService_StreamBlockBatchFullStatic_FullMethodName, opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &oracleServiceStreamBlockBatchFullStaticClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type OracleService_StreamBlockBatchFullStaticClient interface {
-	Recv() (*BlockBatchFull, error)
-	grpc.ClientStream
-}
-
-type oracleServiceStreamBlockBatchFullStaticClient struct {
-	grpc.ClientStream
-}
-
-func (x *oracleServiceStreamBlockBatchFullStaticClient) Recv() (*BlockBatchFull, error) {
-	m := new(BlockBatchFull)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *oracleServiceClient) StreamIndexShortOuts(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamIndexShortOutsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[4], OracleService_StreamIndexShortOuts_FullMethodName, opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &oracleServiceStreamIndexShortOutsClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type OracleService_StreamIndexShortOutsClient interface {
-	Recv() (*IndexShortOuts, error)
-	grpc.ClientStream
-}
-
-type oracleServiceStreamIndexShortOutsClient struct {
-	grpc.ClientStream
-}
-
-func (x *oracleServiceStreamIndexShortOutsClient) Recv() (*IndexShortOuts, error) {
-	m := new(IndexShortOuts)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *oracleServiceClient) GetTweakArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*TweakArray, error) {
-	out := new(TweakArray)
-	err := c.cc.Invoke(ctx, OracleService_GetTweakArray_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *oracleServiceClient) GetTweakIndexArray(ctx context.Context, in *GetTweakIndexRequest, opts ...grpc.CallOption) (*TweakArray, error) {
-	out := new(TweakArray)
-	err := c.cc.Invoke(ctx, OracleService_GetTweakIndexArray_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *oracleServiceClient) GetUTXOArray(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*UTXOArrayResponse, error) {
-	out := new(UTXOArrayResponse)
-	err := c.cc.Invoke(ctx, OracleService_GetUTXOArray_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *oracleServiceClient) GetFilter(ctx context.Context, in *GetFilterRequest, opts ...grpc.CallOption) (*FilterResponse, error) {
-	out := new(FilterResponse)
-	err := c.cc.Invoke(ctx, OracleService_GetFilter_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *oracleServiceClient) GetSpentOutpointsIndex(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*SpentOutpointsIndexResponse, error) {
-	out := new(SpentOutpointsIndexResponse)
-	err := c.cc.Invoke(ctx, OracleService_GetSpentOutpointsIndex_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *oracleServiceClient) GetInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoResponse, error) {
@@ -306,35 +78,61 @@ func (c *oracleServiceClient) GetBlockHashByHeight(ctx context.Context, in *Bloc
 	return out, nil
 }
 
+func (c *oracleServiceClient) StreamComputeIndex(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamComputeIndexClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[0], OracleService_StreamComputeIndex_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oracleServiceStreamComputeIndexClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OracleService_StreamComputeIndexClient interface {
+	Recv() (*ComputeIndexResponse, error)
+	grpc.ClientStream
+}
+
+type oracleServiceStreamComputeIndexClient struct {
+	grpc.ClientStream
+}
+
+func (x *oracleServiceStreamComputeIndexClient) Recv() (*ComputeIndexResponse, error) {
+	m := new(ComputeIndexResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *oracleServiceClient) GetFullBlock(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*FullBlockResponse, error) {
+	out := new(FullBlockResponse)
+	err := c.cc.Invoke(ctx, OracleService_GetFullBlock_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OracleServiceServer is the server API for OracleService service.
 // All implementations must embed UnimplementedOracleServiceServer
 // for forward compatibility
 type OracleServiceServer interface {
-	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
-	StreamBlockBatchSlim(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimServer) error
-	// StreamBlockBatchFull streams complete block batches with all data
-	StreamBlockBatchFull(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullServer) error
-	// StreamBlockBatchSlim streams lightweight block batches for efficient processing
-	StreamBlockBatchSlimStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimStaticServer) error
-	// StreamBlockBatchFull streams complete block batches with all data
-	StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error
-	StreamIndexShortOuts(*RangedBlockHeightRequestFiltered, OracleService_StreamIndexShortOutsServer) error
-	// GetTweakArray returns tweaks for a specific block height
-	GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error)
-	// GetTweakIndexArray returns tweak index data for a specific block height
-	GetTweakIndexArray(context.Context, *GetTweakIndexRequest) (*TweakArray, error)
-	// GetUTXOArray returns UTXOs for a specific block height
-	GetUTXOArray(context.Context, *BlockHeightRequest) (*UTXOArrayResponse, error)
-	// GetFilter returns filter data for a specific block height and type
-	GetFilter(context.Context, *GetFilterRequest) (*FilterResponse, error)
-	// GetSpentOutpointsIndex returns spent outpoints index for a specific block height
-	GetSpentOutpointsIndex(context.Context, *BlockHeightRequest) (*SpentOutpointsIndexResponse, error)
 	// GetInfo returns oracle information
 	GetInfo(context.Context, *emptypb.Empty) (*InfoResponse, error)
 	// GetBestBlockHeight returns the current best block height
 	GetBestBlockHeight(context.Context, *emptypb.Empty) (*BlockHeightResponse, error)
 	// GetBlockHashByHeight returns the block hash for a given height
 	GetBlockHashByHeight(context.Context, *BlockHeightRequest) (*BlockHashResponse, error)
+	// Stream the compute index for a given range
+	StreamComputeIndex(*RangedBlockHeightRequestFiltered, OracleService_StreamComputeIndexServer) error
+	// Get a full block with full information for the block
+	GetFullBlock(context.Context, *BlockHeightRequest) (*FullBlockResponse, error)
 	mustEmbedUnimplementedOracleServiceServer()
 }
 
@@ -342,36 +140,6 @@ type OracleServiceServer interface {
 type UnimplementedOracleServiceServer struct {
 }
 
-func (UnimplementedOracleServiceServer) StreamBlockBatchSlim(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchSlim not implemented")
-}
-func (UnimplementedOracleServiceServer) StreamBlockBatchFull(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchFull not implemented")
-}
-func (UnimplementedOracleServiceServer) StreamBlockBatchSlimStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchSlimStaticServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchSlimStatic not implemented")
-}
-func (UnimplementedOracleServiceServer) StreamBlockBatchFullStatic(*RangedBlockHeightRequest, OracleService_StreamBlockBatchFullStaticServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamBlockBatchFullStatic not implemented")
-}
-func (UnimplementedOracleServiceServer) StreamIndexShortOuts(*RangedBlockHeightRequestFiltered, OracleService_StreamIndexShortOutsServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamIndexShortOuts not implemented")
-}
-func (UnimplementedOracleServiceServer) GetTweakArray(context.Context, *BlockHeightRequest) (*TweakArray, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTweakArray not implemented")
-}
-func (UnimplementedOracleServiceServer) GetTweakIndexArray(context.Context, *GetTweakIndexRequest) (*TweakArray, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTweakIndexArray not implemented")
-}
-func (UnimplementedOracleServiceServer) GetUTXOArray(context.Context, *BlockHeightRequest) (*UTXOArrayResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUTXOArray not implemented")
-}
-func (UnimplementedOracleServiceServer) GetFilter(context.Context, *GetFilterRequest) (*FilterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFilter not implemented")
-}
-func (UnimplementedOracleServiceServer) GetSpentOutpointsIndex(context.Context, *BlockHeightRequest) (*SpentOutpointsIndexResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSpentOutpointsIndex not implemented")
-}
 func (UnimplementedOracleServiceServer) GetInfo(context.Context, *emptypb.Empty) (*InfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInfo not implemented")
 }
@@ -380,6 +148,12 @@ func (UnimplementedOracleServiceServer) GetBestBlockHeight(context.Context, *emp
 }
 func (UnimplementedOracleServiceServer) GetBlockHashByHeight(context.Context, *BlockHeightRequest) (*BlockHashResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockHashByHeight not implemented")
+}
+func (UnimplementedOracleServiceServer) StreamComputeIndex(*RangedBlockHeightRequestFiltered, OracleService_StreamComputeIndexServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamComputeIndex not implemented")
+}
+func (UnimplementedOracleServiceServer) GetFullBlock(context.Context, *BlockHeightRequest) (*FullBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullBlock not implemented")
 }
 func (UnimplementedOracleServiceServer) mustEmbedUnimplementedOracleServiceServer() {}
 
@@ -392,201 +166,6 @@ type UnsafeOracleServiceServer interface {
 
 func RegisterOracleServiceServer(s grpc.ServiceRegistrar, srv OracleServiceServer) {
 	s.RegisterService(&OracleService_ServiceDesc, srv)
-}
-
-func _OracleService_StreamBlockBatchSlim_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RangedBlockHeightRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OracleServiceServer).StreamBlockBatchSlim(m, &oracleServiceStreamBlockBatchSlimServer{stream})
-}
-
-type OracleService_StreamBlockBatchSlimServer interface {
-	Send(*BlockBatchSlim) error
-	grpc.ServerStream
-}
-
-type oracleServiceStreamBlockBatchSlimServer struct {
-	grpc.ServerStream
-}
-
-func (x *oracleServiceStreamBlockBatchSlimServer) Send(m *BlockBatchSlim) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _OracleService_StreamBlockBatchFull_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RangedBlockHeightRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OracleServiceServer).StreamBlockBatchFull(m, &oracleServiceStreamBlockBatchFullServer{stream})
-}
-
-type OracleService_StreamBlockBatchFullServer interface {
-	Send(*BlockBatchFull) error
-	grpc.ServerStream
-}
-
-type oracleServiceStreamBlockBatchFullServer struct {
-	grpc.ServerStream
-}
-
-func (x *oracleServiceStreamBlockBatchFullServer) Send(m *BlockBatchFull) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _OracleService_StreamBlockBatchSlimStatic_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RangedBlockHeightRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OracleServiceServer).StreamBlockBatchSlimStatic(m, &oracleServiceStreamBlockBatchSlimStaticServer{stream})
-}
-
-type OracleService_StreamBlockBatchSlimStaticServer interface {
-	Send(*BlockBatchSlim) error
-	grpc.ServerStream
-}
-
-type oracleServiceStreamBlockBatchSlimStaticServer struct {
-	grpc.ServerStream
-}
-
-func (x *oracleServiceStreamBlockBatchSlimStaticServer) Send(m *BlockBatchSlim) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _OracleService_StreamBlockBatchFullStatic_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RangedBlockHeightRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OracleServiceServer).StreamBlockBatchFullStatic(m, &oracleServiceStreamBlockBatchFullStaticServer{stream})
-}
-
-type OracleService_StreamBlockBatchFullStaticServer interface {
-	Send(*BlockBatchFull) error
-	grpc.ServerStream
-}
-
-type oracleServiceStreamBlockBatchFullStaticServer struct {
-	grpc.ServerStream
-}
-
-func (x *oracleServiceStreamBlockBatchFullStaticServer) Send(m *BlockBatchFull) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _OracleService_StreamIndexShortOuts_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RangedBlockHeightRequestFiltered)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OracleServiceServer).StreamIndexShortOuts(m, &oracleServiceStreamIndexShortOutsServer{stream})
-}
-
-type OracleService_StreamIndexShortOutsServer interface {
-	Send(*IndexShortOuts) error
-	grpc.ServerStream
-}
-
-type oracleServiceStreamIndexShortOutsServer struct {
-	grpc.ServerStream
-}
-
-func (x *oracleServiceStreamIndexShortOutsServer) Send(m *IndexShortOuts) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _OracleService_GetTweakArray_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BlockHeightRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OracleServiceServer).GetTweakArray(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OracleService_GetTweakArray_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OracleServiceServer).GetTweakArray(ctx, req.(*BlockHeightRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OracleService_GetTweakIndexArray_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTweakIndexRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OracleServiceServer).GetTweakIndexArray(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OracleService_GetTweakIndexArray_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OracleServiceServer).GetTweakIndexArray(ctx, req.(*GetTweakIndexRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OracleService_GetUTXOArray_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BlockHeightRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OracleServiceServer).GetUTXOArray(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OracleService_GetUTXOArray_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OracleServiceServer).GetUTXOArray(ctx, req.(*BlockHeightRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OracleService_GetFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFilterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OracleServiceServer).GetFilter(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OracleService_GetFilter_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OracleServiceServer).GetFilter(ctx, req.(*GetFilterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OracleService_GetSpentOutpointsIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BlockHeightRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OracleServiceServer).GetSpentOutpointsIndex(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OracleService_GetSpentOutpointsIndex_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OracleServiceServer).GetSpentOutpointsIndex(ctx, req.(*BlockHeightRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _OracleService_GetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -643,6 +222,45 @@ func _OracleService_GetBlockHashByHeight_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OracleService_StreamComputeIndex_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RangedBlockHeightRequestFiltered)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OracleServiceServer).StreamComputeIndex(m, &oracleServiceStreamComputeIndexServer{stream})
+}
+
+type OracleService_StreamComputeIndexServer interface {
+	Send(*ComputeIndexResponse) error
+	grpc.ServerStream
+}
+
+type oracleServiceStreamComputeIndexServer struct {
+	grpc.ServerStream
+}
+
+func (x *oracleServiceStreamComputeIndexServer) Send(m *ComputeIndexResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _OracleService_GetFullBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BlockHeightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OracleServiceServer).GetFullBlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OracleService_GetFullBlock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OracleServiceServer).GetFullBlock(ctx, req.(*BlockHeightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OracleService_ServiceDesc is the grpc.ServiceDesc for OracleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -650,26 +268,6 @@ var OracleService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "blindbit.oracle.v1.OracleService",
 	HandlerType: (*OracleServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetTweakArray",
-			Handler:    _OracleService_GetTweakArray_Handler,
-		},
-		{
-			MethodName: "GetTweakIndexArray",
-			Handler:    _OracleService_GetTweakIndexArray_Handler,
-		},
-		{
-			MethodName: "GetUTXOArray",
-			Handler:    _OracleService_GetUTXOArray_Handler,
-		},
-		{
-			MethodName: "GetFilter",
-			Handler:    _OracleService_GetFilter_Handler,
-		},
-		{
-			MethodName: "GetSpentOutpointsIndex",
-			Handler:    _OracleService_GetSpentOutpointsIndex_Handler,
-		},
 		{
 			MethodName: "GetInfo",
 			Handler:    _OracleService_GetInfo_Handler,
@@ -682,31 +280,15 @@ var OracleService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetBlockHashByHeight",
 			Handler:    _OracleService_GetBlockHashByHeight_Handler,
 		},
+		{
+			MethodName: "GetFullBlock",
+			Handler:    _OracleService_GetFullBlock_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "StreamBlockBatchSlim",
-			Handler:       _OracleService_StreamBlockBatchSlim_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "StreamBlockBatchFull",
-			Handler:       _OracleService_StreamBlockBatchFull_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "StreamBlockBatchSlimStatic",
-			Handler:       _OracleService_StreamBlockBatchSlimStatic_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "StreamBlockBatchFullStatic",
-			Handler:       _OracleService_StreamBlockBatchFullStatic_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "StreamIndexShortOuts",
-			Handler:       _OracleService_StreamIndexShortOuts_Handler,
+			StreamName:    "StreamComputeIndex",
+			Handler:       _OracleService_StreamComputeIndex_Handler,
 			ServerStreams: true,
 		},
 	},

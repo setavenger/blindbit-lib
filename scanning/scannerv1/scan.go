@@ -12,7 +12,6 @@ import (
 	"github.com/setavenger/blindbit-lib/networking"
 	"github.com/setavenger/blindbit-lib/utils"
 	"github.com/setavenger/blindbit-lib/wallet"
-	"github.com/setavenger/blindbit-scan/pkg/scan"
 	"github.com/setavenger/go-bip352"
 )
 
@@ -125,10 +124,12 @@ func (s *ScannerV1) ScanBlock(blockHeight uint64) ([]*wallet.OwnedUTXO, error) {
 
 	// todo: we are doing computations several times over.
 	// If we have a match we are doing the same step as in precomputtion
-	ownedUTXOsScan, err := scan.ScanDataOptimized(s, utxosTransform, convTweaks)
-	if err != nil {
-		return nil, fmt.Errorf("failed to scan data: %w", err)
-	}
+	// ownedUTXOsScan, err := scan.ScanDataOptimized(s, utxosTransform, convTweaks)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to scan data: %w", err)
+	// }
+
+	var ownedUTXOsScan []wallet.OwnedUTXO
 
 	ownedUTXOs := make([]wallet.OwnedUTXO, len(ownedUTXOsScan))
 	for i := range ownedUTXOsScan {
@@ -228,17 +229,17 @@ func (s *ScannerV1) processTweak(tweak [33]byte) [][]byte {
 	var outputs [][]byte
 
 	var scanSecret [32]byte
-	copy(scanSecret[:], s.scanKey[:])
+	copy(scanSecret[:], s.scanSecretKey[:])
 
 	var tweakBytes [33]byte
 	copy(tweakBytes[:], tweak[:])
 
-	sharedSecret, err := bip352.CreateSharedSecret(&tweak, &s.scanKey, nil)
+	sharedSecret, err := bip352.CreateSharedSecret(&tweak, &s.scanSecretKey, nil)
 	if err != nil {
 		return outputs // Return empty slice if there's an error
 	}
 
-	outputPubKey, err := bip352.CreateOutputPubKey(*sharedSecret, *s.receiverSpendPubKey, 0)
+	outputPubKey, err := bip352.CreateOutputPubKey(*sharedSecret, *s.spendPubKey, 0)
 	if err != nil {
 		return outputs // Return empty slice if there's an error
 	}

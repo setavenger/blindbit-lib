@@ -5,39 +5,13 @@ package blindbit.oracle.v1;
 option go_package = "./pb";
 
 import "google/protobuf/empty.proto";
+// import "google/protobuf/empty.proto";
 import "indexing_server.proto";
 
-// OracleService provides access to blockchain data via gRPC
+// OracleService provides access to Oracles data via RPC
 service OracleService {
-  // StreamBlockBatchSlim streams lightweight block batches for efficient processing
-  rpc StreamBlockBatchSlim(RangedBlockHeightRequest) returns (stream BlockBatchSlim);
-  
-  // StreamBlockBatchFull streams complete block batches with all data
-  rpc StreamBlockBatchFull(RangedBlockHeightRequest) returns (stream BlockBatchFull);
+  /* Basic Meta data and info*/
 
-  // StreamBlockBatchSlim streams lightweight block batches for efficient processing
-  rpc StreamBlockBatchSlimStatic(RangedBlockHeightRequest) returns (stream BlockBatchSlim);
-  
-  // StreamBlockBatchFull streams complete block batches with all data
-  rpc StreamBlockBatchFullStatic(RangedBlockHeightRequest) returns (stream BlockBatchFull);
-
-  rpc StreamIndexShortOuts(RangedBlockHeightRequestFiltered) returns (stream IndexShortOuts);
-  
-  // GetTweakArray returns tweaks for a specific block height
-  rpc GetTweakArray(BlockHeightRequest) returns (TweakArray);
-  
-  // GetTweakIndexArray returns tweak index data for a specific block height
-  rpc GetTweakIndexArray(GetTweakIndexRequest) returns (TweakArray);
-  
-  // GetUTXOArray returns UTXOs for a specific block height
-  rpc GetUTXOArray(BlockHeightRequest) returns (UTXOArrayResponse);
-  
-  // GetFilter returns filter data for a specific block height and type
-  rpc GetFilter(GetFilterRequest) returns (FilterResponse);
-  
-  // GetSpentOutpointsIndex returns spent outpoints index for a specific block height
-  rpc GetSpentOutpointsIndex(BlockHeightRequest) returns (SpentOutpointsIndexResponse);
-  
   // GetInfo returns oracle information
   rpc GetInfo(google.protobuf.Empty) returns (InfoResponse);
   
@@ -46,16 +20,15 @@ service OracleService {
   
   // GetBlockHashByHeight returns the block hash for a given height
   rpc GetBlockHashByHeight(BlockHeightRequest) returns (BlockHashResponse);
+
+  /* Data endpoints */
+
+  // Stream the compute index for a given range
+  rpc StreamComputeIndex(RangedBlockHeightRequestFiltered) returns (stream ComputeIndexResponse);
+  
+  // Get a full block with full information for the block
+  rpc GetFullBlock(BlockHeightRequest) returns (FullBlockResponse);
+
+  // Spent outputs short 
 }
 
-// GetTweakIndexRequest requests tweak index data with optional dust limit filtering
-message GetTweakIndexRequest {
-  uint32 block_height = 1;
-  uint64 dust_limit = 2; // 0 means no dust limit filtering
-}
-
-// GetFilterRequest requests filter data for a specific block and type
-message GetFilterRequest {
-  uint32 block_height = 1;
-  FilterType filter_type = 2;
-}

@@ -1,6 +1,7 @@
 package scannerv1
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -15,9 +16,13 @@ import (
 	"github.com/setavenger/go-bip352"
 )
 
+func (s *ScannerV1) Watch(context.Context) error {
+	return nil
+}
+
 // Scan scans the blocks between startHeight and endHeight
 // is blocking
-func (s *ScannerV1) Scan(start, end uint32) error {
+func (s *ScannerV1) Scan(ctx context.Context, start, end uint32) error {
 	return nil
 }
 

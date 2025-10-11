@@ -18,7 +18,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 	ctx context.Context,
 	startHeight, endHeight uint32,
 ) error {
-	stream, err := s.oracleClient.StreamIndexShortOuts(ctx, &pb.RangedBlockHeightRequestFiltered{
+	stream, err := s.oracleClient.StreamComputeIndex(ctx, &pb.RangedBlockHeightRequestFiltered{
 		Start: uint64(startHeight),
 		End:   uint64(endHeight),
 	})
@@ -29,7 +29,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 
 	defer stream.CloseSend()
 	// doneChan := make(chan struct{})
-	workChan := make(chan *pb.IndexShortOuts, 50)
+	workChan := make(chan *pb.ComputeIndexResponse, 50)
 	doneChan := make(chan struct{})
 	errChan := make(chan error)
 

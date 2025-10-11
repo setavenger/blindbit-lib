@@ -104,7 +104,7 @@ func (s *ScannerV2) Scan(
 	ctx context.Context,
 	startHeight, endHeight uint32,
 ) error {
-	stream, err := s.oracleClient.StreamIndexShortOuts(
+	stream, err := s.oracleClient.StreamComputeIndex(
 		ctx,
 		&pb.RangedBlockHeightRequestFiltered{
 			Start: uint64(startHeight),

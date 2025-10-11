@@ -12,6 +12,11 @@ import (
 	"github.com/setavenger/go-bip352"
 )
 
+type mappingStruct struct {
+	txid [32]byte
+	utxo *pb.UTXOItemLight
+}
+
 func (s *ScannerV2) CompleteFoundShortOutputs(
 	ctx context.Context, founds []*scanning.FoundOutputShort,
 ) (
@@ -21,30 +26,23 @@ func (s *ScannerV2) CompleteFoundShortOutputs(
 	// todo: group by height and txid for less overhead and redundancy
 	for i := range founds {
 		shortOut := founds[i]
-		stream, err := s.oracleClient.StreamBlockBatchFull(
-			ctx,
-			&pb.RangedBlockHeightRequest{
-				Start: uint64(shortOut.Height), End: uint64(shortOut.Height),
-			},
-		)
+		block, err := s.oracleClient.GetFullBlock(ctx, &pb.BlockHeightRequest{BlockHeight: uint64(shortOut.Height)})
 		if err != nil {
-			return nil, err
-		}
-
-		// only one recv because we are only requesting one height
-		val, err := stream.Recv()
-		if err != nil {
-			// should not have an error here as we are not waiting or EOF
 			return nil, err
 		}
 
 		var txOutputs [][32]byte
-		outputsDetails := make(map[[32]byte]*pb.UTXO)
-		for i := range val.Utxos {
-			if bytes.Equal(val.Utxos[i].Txid, shortOut.Txid[:]) {
-				pubKey := val.Utxos[i].ScriptPubKey
-				txOutputs = append(txOutputs, [32]byte(pubKey))
-				outputsDetails[[32]byte(pubKey)] = val.Utxos[i]
+		outputsDetails := make(map[[32]byte]mappingStruct) // map x-only key to full utxo details
+		for i := range block.Index {
+			if bytes.Equal(block.Index[i].Txid, shortOut.Txid[:]) {
+				for j := range block.Index[i].Utxos {
+					pubKey := block.Index[i].Utxos[j].Pubkey
+					txOutputs = append(txOutputs, [32]byte(pubKey))
+					outputsDetails[[32]byte(pubKey)] = mappingStruct{
+						txid: [32]byte(block.Index[i].Txid),
+						utxo: block.Index[i].Utxos[j],
+					}
+				}
 			}
 		}
 
@@ -83,13 +81,14 @@ func (s *ScannerV2) CompleteFoundShortOutputs(
 			}
 
 			state := wallet.StateUnspent
-			if details.Spent {
-				state = wallet.StateSpent
-			}
+			// todo: make sure this is aligned
+			// if details.Spent {
+			// 	state = wallet.StateSpent
+			// }
 			ownedUTXOs = append(ownedUTXOs, &wallet.OwnedUTXO{
-				Txid:         [32]byte(details.Txid),
-				Vout:         details.Vout,
-				Amount:       details.Value,
+				Txid:         details.txid,
+				Vout:         details.utxo.Vout,
+				Amount:       details.utxo.Amount,
 				PrivKeyTweak: foundUtxos[i].SecKeyTweak,
 				PubKey:       foundUtxos[i].Output,
 				Timestamp:    0,

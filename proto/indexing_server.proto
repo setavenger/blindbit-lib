@@ -38,7 +38,7 @@ message BlockHashResponse {
 // IndexResponse is a generic response for any array of bytes with block identifier
 message IndexResponse {
   BlockIdentifier block_identifier = 1;
-  repeated bytes index = 2; // Array of bytes (size depends on endpoint: 33-byte tweaks, 8-byte pubkeys, etc.)
+  bytes index = 2; // Array of bytes (size depends on endpoint: 33-byte tweaks, 8-byte pubkeys, etc.)
 }
 
 // UTXOItem represents a UTXO item as used in HTTP responses
@@ -54,6 +54,12 @@ message UTXOItemLight {
   uint32 vout = 1;
   uint64 amount = 2;
   bytes pubkey = 3;         // 32 bytes (x-only pubkey)
+}
+
+message BlockScanDataShortResponse {
+  BlockIdentifier block_identifier = 1;
+  repeated ComputeIndexTxItem comp_index = 2;
+  bytes spent_outputs = 3; // contiguous 8 byte arrays
 }
 
 // ComputeIndexResponse returns a compact transaction index with tweak mappings

@@ -23,12 +23,16 @@ service OracleService {
 
   /* Data endpoints */
 
+  // Holistic stream interface to probabilistically find new or spent outputs
+  rpc StreamBlockScanDataShort(RangedBlockHeightRequestFiltered) returns (stream BlockScanDataShortResponse );
+
   // Stream the compute index for a given range
   rpc StreamComputeIndex(RangedBlockHeightRequestFiltered) returns (stream ComputeIndexResponse);
   
   // Get a full block with full information for the block
   rpc GetFullBlock(BlockHeightRequest) returns (FullBlockResponse);
 
-  // Spent outputs short 
+  // Get Short spent outputs
+  rpc GetSpentOutputsShort(BlockHeightRequest) returns (IndexResponse);
 }
 

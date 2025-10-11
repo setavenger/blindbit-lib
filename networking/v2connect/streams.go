@@ -43,3 +43,11 @@ func (c *OracleClient) StreamComputeIndex(
 ) {
 	return c.client.StreamComputeIndex(ctx, request)
 }
+
+func (c *OracleClient) StreamBlockScanDataShort(
+	ctx context.Context, request *pb.RangedBlockHeightRequestFiltered,
+) (
+	pb.OracleService_StreamBlockScanDataShortClient, error,
+) {
+	return c.client.StreamBlockScanDataShort(ctx, request)
+}

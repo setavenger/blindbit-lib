@@ -28,7 +28,6 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 	}
 
 	defer stream.CloseSend()
-	// doneChan := make(chan struct{})
 	workChan := make(chan *pb.ComputeIndexResponse, 50)
 	doneChan := make(chan struct{})
 	errChan := make(chan error)
@@ -36,9 +35,6 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 	var txCounter atomic.Int64
 	s.scanning = true
 	defer s.setScanFalse()
-
-	// internalCtx, internalCtxCancel := context.WithCancel(ctx)
-	// defer internalCtxCancel()
 
 	go func() {
 		for {
@@ -57,7 +53,6 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 					return
 				} else if errors.Is(err, io.EOF) {
 					close(workChan)
-					// doneChan <- struct{}{}
 					return
 				}
 				workChan <- blockData
@@ -76,6 +71,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 				case <-ctx.Done():
 					// todo: do we want an error to be returned here
 					logging.L.Err(ctx.Err()).Msg("context done")
+					errChan <- ctx.Err()
 					return
 				case blockData := <-workChan:
 					if blockData == nil {
@@ -95,7 +91,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 							errChan <- err
 							return
 						}
-						// fmt.Printf("txid: %x\n", computeIndexTxItem.Txid)
+
 						if len(foundOutputs) > 0 {
 							// Assign txid to all found outputs before sending through channel
 							for j := range foundOutputs {

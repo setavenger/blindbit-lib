@@ -25,13 +25,15 @@ var File_oracle_service_proto protoreflect.FileDescriptor
 
 const file_oracle_service_proto_rawDesc = "" +
 	"\n" +
-	"\x14oracle_service.proto\x12\x12blindbit.oracle.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x15indexing_server.proto2\xe9\x03\n" +
+	"\x14oracle_service.proto\x12\x12blindbit.oracle.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x15indexing_server.proto2\xd1\x05\n" +
 	"\rOracleService\x12C\n" +
 	"\aGetInfo\x12\x16.google.protobuf.Empty\x1a .blindbit.oracle.v1.InfoResponse\x12U\n" +
 	"\x12GetBestBlockHeight\x12\x16.google.protobuf.Empty\x1a'.blindbit.oracle.v1.BlockHeightResponse\x12e\n" +
-	"\x14GetBlockHashByHeight\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.BlockHashResponse\x12v\n" +
+	"\x14GetBlockHashByHeight\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.BlockHashResponse\x12\x82\x01\n" +
+	"\x18StreamBlockScanDataShort\x124.blindbit.oracle.v1.RangedBlockHeightRequestFiltered\x1a..blindbit.oracle.v1.BlockScanDataShortResponse0\x01\x12v\n" +
 	"\x12StreamComputeIndex\x124.blindbit.oracle.v1.RangedBlockHeightRequestFiltered\x1a(.blindbit.oracle.v1.ComputeIndexResponse0\x01\x12]\n" +
-	"\fGetFullBlock\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.FullBlockResponseB\x06Z\x04./pbb\x06proto3"
+	"\fGetFullBlock\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.FullBlockResponse\x12a\n" +
+	"\x14GetSpentOutputsShort\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a!.blindbit.oracle.v1.IndexResponseB\x06Z\x04./pbb\x06proto3"
 
 var file_oracle_service_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),                    // 0: google.protobuf.Empty
@@ -40,22 +42,28 @@ var file_oracle_service_proto_goTypes = []any{
 	(*InfoResponse)(nil),                     // 3: blindbit.oracle.v1.InfoResponse
 	(*BlockHeightResponse)(nil),              // 4: blindbit.oracle.v1.BlockHeightResponse
 	(*BlockHashResponse)(nil),                // 5: blindbit.oracle.v1.BlockHashResponse
-	(*ComputeIndexResponse)(nil),             // 6: blindbit.oracle.v1.ComputeIndexResponse
-	(*FullBlockResponse)(nil),                // 7: blindbit.oracle.v1.FullBlockResponse
+	(*BlockScanDataShortResponse)(nil),       // 6: blindbit.oracle.v1.BlockScanDataShortResponse
+	(*ComputeIndexResponse)(nil),             // 7: blindbit.oracle.v1.ComputeIndexResponse
+	(*FullBlockResponse)(nil),                // 8: blindbit.oracle.v1.FullBlockResponse
+	(*IndexResponse)(nil),                    // 9: blindbit.oracle.v1.IndexResponse
 }
 var file_oracle_service_proto_depIdxs = []int32{
 	0, // 0: blindbit.oracle.v1.OracleService.GetInfo:input_type -> google.protobuf.Empty
 	0, // 1: blindbit.oracle.v1.OracleService.GetBestBlockHeight:input_type -> google.protobuf.Empty
 	1, // 2: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	2, // 3: blindbit.oracle.v1.OracleService.StreamComputeIndex:input_type -> blindbit.oracle.v1.RangedBlockHeightRequestFiltered
-	1, // 4: blindbit.oracle.v1.OracleService.GetFullBlock:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	3, // 5: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
-	4, // 6: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
-	5, // 7: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
-	6, // 8: blindbit.oracle.v1.OracleService.StreamComputeIndex:output_type -> blindbit.oracle.v1.ComputeIndexResponse
-	7, // 9: blindbit.oracle.v1.OracleService.GetFullBlock:output_type -> blindbit.oracle.v1.FullBlockResponse
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	2, // 3: blindbit.oracle.v1.OracleService.StreamBlockScanDataShort:input_type -> blindbit.oracle.v1.RangedBlockHeightRequestFiltered
+	2, // 4: blindbit.oracle.v1.OracleService.StreamComputeIndex:input_type -> blindbit.oracle.v1.RangedBlockHeightRequestFiltered
+	1, // 5: blindbit.oracle.v1.OracleService.GetFullBlock:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	1, // 6: blindbit.oracle.v1.OracleService.GetSpentOutputsShort:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	3, // 7: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
+	4, // 8: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
+	5, // 9: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
+	6, // 10: blindbit.oracle.v1.OracleService.StreamBlockScanDataShort:output_type -> blindbit.oracle.v1.BlockScanDataShortResponse
+	7, // 11: blindbit.oracle.v1.OracleService.StreamComputeIndex:output_type -> blindbit.oracle.v1.ComputeIndexResponse
+	8, // 12: blindbit.oracle.v1.OracleService.GetFullBlock:output_type -> blindbit.oracle.v1.FullBlockResponse
+	9, // 13: blindbit.oracle.v1.OracleService.GetSpentOutputsShort:output_type -> blindbit.oracle.v1.IndexResponse
+	7, // [7:14] is the sub-list for method output_type
+	0, // [0:7] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

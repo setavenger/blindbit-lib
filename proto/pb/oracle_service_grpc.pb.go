@@ -20,11 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	OracleService_GetInfo_FullMethodName              = "/blindbit.oracle.v1.OracleService/GetInfo"
-	OracleService_GetBestBlockHeight_FullMethodName   = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
-	OracleService_GetBlockHashByHeight_FullMethodName = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
-	OracleService_StreamComputeIndex_FullMethodName   = "/blindbit.oracle.v1.OracleService/StreamComputeIndex"
-	OracleService_GetFullBlock_FullMethodName         = "/blindbit.oracle.v1.OracleService/GetFullBlock"
+	OracleService_GetInfo_FullMethodName                  = "/blindbit.oracle.v1.OracleService/GetInfo"
+	OracleService_GetBestBlockHeight_FullMethodName       = "/blindbit.oracle.v1.OracleService/GetBestBlockHeight"
+	OracleService_GetBlockHashByHeight_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetBlockHashByHeight"
+	OracleService_StreamBlockScanDataShort_FullMethodName = "/blindbit.oracle.v1.OracleService/StreamBlockScanDataShort"
+	OracleService_StreamComputeIndex_FullMethodName       = "/blindbit.oracle.v1.OracleService/StreamComputeIndex"
+	OracleService_GetFullBlock_FullMethodName             = "/blindbit.oracle.v1.OracleService/GetFullBlock"
+	OracleService_GetSpentOutputsShort_FullMethodName     = "/blindbit.oracle.v1.OracleService/GetSpentOutputsShort"
 )
 
 // OracleServiceClient is the client API for OracleService service.
@@ -37,10 +39,14 @@ type OracleServiceClient interface {
 	GetBestBlockHeight(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BlockHeightResponse, error)
 	// GetBlockHashByHeight returns the block hash for a given height
 	GetBlockHashByHeight(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*BlockHashResponse, error)
+	// Holistic stream interface to probabilistically find new or spent outputs
+	StreamBlockScanDataShort(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamBlockScanDataShortClient, error)
 	// Stream the compute index for a given range
 	StreamComputeIndex(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamComputeIndexClient, error)
 	// Get a full block with full information for the block
 	GetFullBlock(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*FullBlockResponse, error)
+	// Get Short spent outputs
+	GetSpentOutputsShort(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*IndexResponse, error)
 }
 
 type oracleServiceClient struct {
@@ -78,8 +84,40 @@ func (c *oracleServiceClient) GetBlockHashByHeight(ctx context.Context, in *Bloc
 	return out, nil
 }
 
+func (c *oracleServiceClient) StreamBlockScanDataShort(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamBlockScanDataShortClient, error) {
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[0], OracleService_StreamBlockScanDataShort_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &oracleServiceStreamBlockScanDataShortClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type OracleService_StreamBlockScanDataShortClient interface {
+	Recv() (*BlockScanDataShortResponse, error)
+	grpc.ClientStream
+}
+
+type oracleServiceStreamBlockScanDataShortClient struct {
+	grpc.ClientStream
+}
+
+func (x *oracleServiceStreamBlockScanDataShortClient) Recv() (*BlockScanDataShortResponse, error) {
+	m := new(BlockScanDataShortResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *oracleServiceClient) StreamComputeIndex(ctx context.Context, in *RangedBlockHeightRequestFiltered, opts ...grpc.CallOption) (OracleService_StreamComputeIndexClient, error) {
-	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[0], OracleService_StreamComputeIndex_FullMethodName, opts...)
+	stream, err := c.cc.NewStream(ctx, &OracleService_ServiceDesc.Streams[1], OracleService_StreamComputeIndex_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +157,15 @@ func (c *oracleServiceClient) GetFullBlock(ctx context.Context, in *BlockHeightR
 	return out, nil
 }
 
+func (c *oracleServiceClient) GetSpentOutputsShort(ctx context.Context, in *BlockHeightRequest, opts ...grpc.CallOption) (*IndexResponse, error) {
+	out := new(IndexResponse)
+	err := c.cc.Invoke(ctx, OracleService_GetSpentOutputsShort_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OracleServiceServer is the server API for OracleService service.
 // All implementations must embed UnimplementedOracleServiceServer
 // for forward compatibility
@@ -129,10 +176,14 @@ type OracleServiceServer interface {
 	GetBestBlockHeight(context.Context, *emptypb.Empty) (*BlockHeightResponse, error)
 	// GetBlockHashByHeight returns the block hash for a given height
 	GetBlockHashByHeight(context.Context, *BlockHeightRequest) (*BlockHashResponse, error)
+	// Holistic stream interface to probabilistically find new or spent outputs
+	StreamBlockScanDataShort(*RangedBlockHeightRequestFiltered, OracleService_StreamBlockScanDataShortServer) error
 	// Stream the compute index for a given range
 	StreamComputeIndex(*RangedBlockHeightRequestFiltered, OracleService_StreamComputeIndexServer) error
 	// Get a full block with full information for the block
 	GetFullBlock(context.Context, *BlockHeightRequest) (*FullBlockResponse, error)
+	// Get Short spent outputs
+	GetSpentOutputsShort(context.Context, *BlockHeightRequest) (*IndexResponse, error)
 	mustEmbedUnimplementedOracleServiceServer()
 }
 
@@ -149,11 +200,17 @@ func (UnimplementedOracleServiceServer) GetBestBlockHeight(context.Context, *emp
 func (UnimplementedOracleServiceServer) GetBlockHashByHeight(context.Context, *BlockHeightRequest) (*BlockHashResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockHashByHeight not implemented")
 }
+func (UnimplementedOracleServiceServer) StreamBlockScanDataShort(*RangedBlockHeightRequestFiltered, OracleService_StreamBlockScanDataShortServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamBlockScanDataShort not implemented")
+}
 func (UnimplementedOracleServiceServer) StreamComputeIndex(*RangedBlockHeightRequestFiltered, OracleService_StreamComputeIndexServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamComputeIndex not implemented")
 }
 func (UnimplementedOracleServiceServer) GetFullBlock(context.Context, *BlockHeightRequest) (*FullBlockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFullBlock not implemented")
+}
+func (UnimplementedOracleServiceServer) GetSpentOutputsShort(context.Context, *BlockHeightRequest) (*IndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSpentOutputsShort not implemented")
 }
 func (UnimplementedOracleServiceServer) mustEmbedUnimplementedOracleServiceServer() {}
 
@@ -222,6 +279,27 @@ func _OracleService_GetBlockHashByHeight_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OracleService_StreamBlockScanDataShort_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(RangedBlockHeightRequestFiltered)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OracleServiceServer).StreamBlockScanDataShort(m, &oracleServiceStreamBlockScanDataShortServer{stream})
+}
+
+type OracleService_StreamBlockScanDataShortServer interface {
+	Send(*BlockScanDataShortResponse) error
+	grpc.ServerStream
+}
+
+type oracleServiceStreamBlockScanDataShortServer struct {
+	grpc.ServerStream
+}
+
+func (x *oracleServiceStreamBlockScanDataShortServer) Send(m *BlockScanDataShortResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _OracleService_StreamComputeIndex_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(RangedBlockHeightRequestFiltered)
 	if err := stream.RecvMsg(m); err != nil {
@@ -261,6 +339,24 @@ func _OracleService_GetFullBlock_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OracleService_GetSpentOutputsShort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BlockHeightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OracleServiceServer).GetSpentOutputsShort(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OracleService_GetSpentOutputsShort_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OracleServiceServer).GetSpentOutputsShort(ctx, req.(*BlockHeightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OracleService_ServiceDesc is the grpc.ServiceDesc for OracleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -284,8 +380,17 @@ var OracleService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetFullBlock",
 			Handler:    _OracleService_GetFullBlock_Handler,
 		},
+		{
+			MethodName: "GetSpentOutputsShort",
+			Handler:    _OracleService_GetSpentOutputsShort_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamBlockScanDataShort",
+			Handler:       _OracleService_StreamBlockScanDataShort_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "StreamComputeIndex",
 			Handler:       _OracleService_StreamComputeIndex_Handler,

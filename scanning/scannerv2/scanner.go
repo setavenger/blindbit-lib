@@ -1,14 +1,10 @@
 package scannerv2
 
 import (
-	"context"
-	"errors"
-	"io"
 	"sync"
 
 	"github.com/setavenger/blindbit-lib/logging"
 	"github.com/setavenger/blindbit-lib/networking/v2connect"
-	"github.com/setavenger/blindbit-lib/proto/pb"
 	"github.com/setavenger/blindbit-lib/scanning"
 	"github.com/setavenger/blindbit-lib/wallet"
 	"github.com/setavenger/go-bip352"
@@ -33,13 +29,17 @@ type ScannerV2 struct {
 	stopChan            chan struct{}
 	utxosIncompleteChan chan *scanning.FoundOutputShort
 	utxosOwnedChan      chan *wallet.OwnedUTXO
+	spentChan           chan *wallet.OwnedUTXO
 	progressChan        chan uint32
+
+	wallet *wallet.Wallet
 
 	// helpers
 	mu                        sync.Mutex
 	utxosIncompleteChanCalled bool
 	utxosOwnedChanCalled      bool
 	progressChanCalled        bool
+	spentChanCalled           bool
 }
 
 func NewScannerV2(
@@ -96,111 +96,6 @@ func (s *ScannerV2) ProgressUpdateChan() <-chan uint32 {
 
 func (s *ScannerV2) ScanHeight() uint32 {
 	return 0
-}
-
-// Scan scans the blocks between startHeight and endHeight
-// is blocking
-func (s *ScannerV2) Scan(
-	ctx context.Context,
-	startHeight, endHeight uint32,
-) error {
-	stream, err := s.oracleClient.StreamComputeIndex(
-		ctx,
-		&pb.RangedBlockHeightRequestFiltered{
-			Start: uint64(startHeight),
-			End:   uint64(endHeight),
-		},
-	)
-	if err != nil {
-		logging.L.Err(err).Msg("failed to stream block batch slim")
-		return err
-	}
-
-	defer stream.CloseSend()
-	doneChan := make(chan struct{})
-	errChan := make(chan error)
-
-	var txCounter = 0
-
-	go func() {
-		s.scanning = true
-		defer s.setScanFalse()
-		defer close(doneChan)
-
-		for {
-			select {
-			case <-ctx.Done():
-				logging.L.Err(ctx.Err()).Msg("context done")
-				return
-			case <-s.stopChan:
-				logging.L.Info().Msg("scanner stopped")
-				return
-			default:
-				blockData, err := stream.Recv()
-				if err != nil && !errors.Is(err, io.EOF) {
-					logging.L.Err(err).Msg("failed to receive block batch slim")
-					return
-				} else if errors.Is(err, io.EOF) {
-					doneChan <- struct{}{}
-					return
-				}
-
-				for i := range blockData.Index {
-					txCounter++
-					computeIndexTxItem := blockData.Index[i]
-					foundOutputs, err := scanning.ReceiverScanTransactionShortOutputsProto(
-						s.scanKey,
-						s.receiverSpendPubKey,
-						s.labels,
-						computeIndexTxItem,
-					)
-					if err != nil {
-						logging.L.Err(err).Msg("failed to scan transaction short outputs")
-						return
-					}
-					if len(foundOutputs) > 0 {
-						for j := range foundOutputs {
-							foundOutputs[j].Txid = [32]byte(computeIndexTxItem.Txid)
-						}
-						if s.utxosIncompleteChanCalled {
-							for i := range foundOutputs {
-								s.utxosIncompleteChan <- foundOutputs[i]
-							}
-						}
-						for i := range foundOutputs {
-							foundOutputs[i].Height = uint32(blockData.BlockIdentifier.BlockHeight)
-						}
-						ownedUTXOs, err := s.CompleteFoundShortOutputs(ctx, foundOutputs)
-						if err != nil {
-							logging.L.Err(err).Msg("failed to complete short utxo outputs")
-							errChan <- err
-							return
-						}
-						if len(ownedUTXOs) > 0 && s.utxosOwnedChanCalled {
-							for i := range ownedUTXOs {
-								s.utxosOwnedChan <- ownedUTXOs[i]
-							}
-						}
-					}
-					s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
-				}
-				logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
-			}
-		}
-	}()
-
-	select {
-	case err := <-errChan:
-		logging.L.Err(err).Msg("failed to complete scanning")
-		return err
-	case <-doneChan:
-		// do nothing
-	}
-
-	// fmt.Println("txCounter:", txCounter)
-	logging.L.Trace().Msgf("txCounter: %d", txCounter)
-
-	return nil
 }
 
 // Stop the scanner

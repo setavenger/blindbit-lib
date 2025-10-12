@@ -26,7 +26,7 @@ func SendToRecipients(
 	recipients []Recipient,
 	feeRate uint32,
 ) (
-	[]byte,
+	*TxMetadata,
 	error,
 ) {
 	// Convert recipients to coin selector format
@@ -55,6 +55,11 @@ func SendToRecipients(
 	)
 }
 
+type TxMetadata struct {
+	Tx              *wire.MsgTx
+	ChangeRecipient *RecipientImpl
+}
+
 func (w *Wallet) SendToRecipients(
 	recipients []Recipient,
 	utxos UtxoCollection,
@@ -62,7 +67,7 @@ func (w *Wallet) SendToRecipients(
 	minChangeAmount uint64,
 	markSpent, useSpentUnconfirmed bool,
 ) (
-	txBytes []byte,
+	txMetaOut *TxMetadata,
 	err error,
 ) {
 	// Get chain parameters
@@ -106,12 +111,16 @@ func (w *Wallet) SendToRecipients(
 		sumAllInputs += vin.Amount
 	}
 
+	var changeRecipient *RecipientImpl
+
 	if changeAmount > 0 {
-		// change exists, and it should be greater than the MinChangeAmount
-		recipients = append(recipients, &RecipientImpl{
+		changeRecipient = &RecipientImpl{
 			Address: w.ChangeAddress(),
 			Amount:  changeAmount,
-		})
+			Change:  true,
+		}
+		// change exists, and it should be greater than the MinChangeAmount
+		recipients = append(recipients, changeRecipient)
 	}
 
 	// extract the ScriptPubKeys of the SP recipients with the selected txInputs
@@ -137,32 +146,18 @@ func (w *Wallet) SendToRecipients(
 
 	err = psbt.MaybeFinalizeAll(packet)
 	if err != nil {
-		panic(err) // todo remove panic
+		return nil, err
 	}
 
 	finalTx, err := psbt.Extract(packet)
 	if err != nil {
-		panic(err) // todo remove panic
+		return nil, err
 	}
 
 	var sumAllOutputs uint64
 	for _, recipient := range recipients {
 		sumAllOutputs += recipient.GetAmount()
 	}
-	// vSize := mempool.GetTxVirtualSize(btcutil.NewTx(finalTx))
-	// actualFee := sumAllInputs - sumAllOutputs
-	// actualFeeRate := float64(actualFee) / float64(vSize)
-
-	// errorTerm := 0.25 // todo make variable
-	// if actualFeeRate > float64(feeRate)+errorTerm {
-	// 	err = fmt.Errorf("actual fee rate deviates to strong from desired fee rate: %f > %d", actualFeeRate, feeRate)
-	// 	return nil, err
-	// }
-	//
-	// if actualFeeRate < float64(feeRate)-errorTerm {
-	// 	err = fmt.Errorf("actual fee rate deviates to strong from desired fee rate: %f < %d", actualFeeRate, feeRate)
-	// 	return nil, err
-	// }
 
 	var buf bytes.Buffer
 	err = finalTx.Serialize(&buf)
@@ -188,17 +183,27 @@ func (w *Wallet) SendToRecipients(
 				if bytes.Equal(vinOutpoint[:], utxoOutpoint[:]) {
 					utxo.State = StateUnconfirmedSpent
 					found++
-					logging.L.Debug().Hex("outpoint", utxoOutpoint[:]).Msg("internally marked as unconfirmed spent")
+					logging.L.Debug().
+						Hex("outpoint", utxoOutpoint[:]).
+						Msg("internally marked as unconfirmed spent")
 				}
 			}
 		}
 		if found != len(vins) {
-			err = fmt.Errorf("we could not mark enough utxos as spent. marked %d, needed %d", found, len(vins))
+			err = fmt.Errorf(
+				"we could not mark enough utxos as spent. marked %d, needed %d",
+				found, len(vins),
+			)
 			return nil, err
 		}
 	}
 
-	return buf.Bytes(), err
+	txMetaOut = &TxMetadata{
+		Tx:              finalTx,
+		ChangeRecipient: changeRecipient,
+	}
+
+	return txMetaOut, err
 }
 
 // Taken from blindbitd

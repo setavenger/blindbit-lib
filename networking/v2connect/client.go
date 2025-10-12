@@ -6,6 +6,7 @@ import (
 	"github.com/setavenger/blindbit-lib/proto/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type OracleClient struct {
@@ -28,6 +29,22 @@ func NewClient(ctx context.Context, address string) (*OracleClient, error) {
 
 func (c *OracleClient) Close() error {
 	return c.conn.Close()
+}
+
+func (c *OracleClient) GetInfo(
+	ctx context.Context,
+) (
+	*pb.InfoResponse, error,
+) {
+	return c.client.GetInfo(ctx, &emptypb.Empty{})
+}
+
+func (c *OracleClient) GetSpentOutputsShort(
+	ctx context.Context, request *pb.BlockHeightRequest,
+) (
+	*pb.IndexResponse, error,
+) {
+	return c.client.GetSpentOutputsShort(ctx, request)
 }
 
 func (c *OracleClient) GetFullBlock(

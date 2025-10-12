@@ -56,13 +56,17 @@ type Recipient interface {
 	GetAddress() string
 	GetAmount() uint64
 	GetPkScript() []byte
+	IsChange() bool
 }
+
+var _ Recipient = (*RecipientImpl)(nil)
 
 // Recipient represents a transaction recipient
 type RecipientImpl struct {
 	Address  string
 	Amount   uint64
 	PkScript []byte
+	Change   bool
 }
 
 func (r *RecipientImpl) GetAddress() string {
@@ -79,8 +83,13 @@ func (r *RecipientImpl) GetPkScript() []byte {
 	return out
 }
 
+func (r *RecipientImpl) IsChange() bool {
+	return r.Change
+}
+
 // FeeRateCoinSelector
-// Custom CoinSelector implementation. Selects according to a given fee rate. Focused on taproot-only inputs.
+// Custom CoinSelector implementation. Selects according to a given fee rate.
+// Focused on taproot-only inputs.
 // Needs the OwnedUTXOs to contain at least the Amount of the UTXO.
 // The function will fail if not enough value could be added together.
 // Other data in the OwnedUTXOs is preserved.

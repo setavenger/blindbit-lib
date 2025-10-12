@@ -36,6 +36,7 @@ type BaseScanner interface {
 
 type OwnedScanner interface {
 	BaseScanner
+
 	// SubscribeOwnedUTXOs will push through full UTXOs
 	// which belong to the keys provided to the scanner
 	SubscribeOwnedUTXOs() <-chan *wallet.OwnedUTXO
@@ -43,6 +44,7 @@ type OwnedScanner interface {
 
 type PartialScanner interface {
 	BaseScanner
+
 	// SubscribeProbableUTXOs will push through anything which is a potential UTXO
 	// e.g. when checking against 8 byte output prefixes
 	// It is not fully guaranteed that the UTXO belongs to the set of keys provided
@@ -54,7 +56,19 @@ type PartialScanner interface {
 	SubscribeProbableUTXOs() <-chan *FoundOutputShort
 }
 
+type SpentScanner interface {
+	BaseScanner
+
+	// AttachWallet takes the wallet which should be monitored for spent utxos.
+	// UTXOs will be marked within the wallet.
+	AttachWallet(*wallet.Wallet) error
+
+	// SubscribeSpent acts as a notification if a utxo was marked as spent
+	SubscribeSpent() <-chan *wallet.OwnedUTXO
+}
+
 type FullScanner interface {
+	SpentScanner
 	PartialScanner
 	OwnedScanner
 }

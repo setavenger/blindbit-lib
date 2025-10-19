@@ -43,7 +43,6 @@ type TxOut struct {
 func (t TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
 	// check if we already have this transaction as something we sent
 	txItem := t.FindTxItemByTxID(utxo.Txid)
-	logging.L.Warn().Any("txitem", txItem).Msg("this is what we got")
 
 	// if yes we mark as spent, else we add utxos as a new transaction
 	if txItem != nil {
@@ -145,6 +144,10 @@ func (t TxItem) NetAmount() int {
 }
 
 func (t TxItem) Fees() int {
+	if len(t.TxIns) == 0 {
+		// If we have no Ins we did not pay the fee
+		return 0
+	}
 	return t.SumInflows(InflowAggModeAll) - t.SumOutFlows()
 }
 
@@ -152,13 +155,13 @@ func (t *TxItem) SumInflows(aggMode InflowAggMode) (out int) {
 	for i := range t.TxOut {
 		output := t.TxOut[i]
 		switch {
-		case aggMode&InflowAggModeAll == 0:
+		case aggMode&InflowAggModeAll != 0:
 			out += int(output.Amount)
-		case aggMode&InflowAggModeSelf == 0:
+		case aggMode&InflowAggModeSelf != 0:
 			if output.Self {
 				out += int(output.Amount)
 			}
-		case aggMode&InflowAggModeExternal == 0:
+		case aggMode&InflowAggModeExternal != 0:
 			if !output.Self {
 				out += int(output.Amount)
 			}
@@ -235,8 +238,6 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 		for _, walletUtxo := range w.GetUTXOs() {
 			wUTXOOutpoint := walletUtxo.SerialiseToOutpoint()
 
-			// fmt.Printf("%x - %x\n", prevOutpoint, wUTXOOutpoint)
-
 			if prevOutpoint == wUTXOOutpoint {
 				txItem.TxIns = append(txItem.TxIns, &TxIn{
 					Outpoint: walletUtxo.SerialiseToOutpoint(),
@@ -259,14 +260,6 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 		for j := range txmeta.AllRecipients {
 			recp := txmeta.AllRecipients[j]
 			if bytes.Equal(out.PkScript, recp.GetPkScript()) {
-				fmt.Printf("%x - %x\n", out.PkScript, recp.GetPkScript())
-				// todo: this ignores labels in general
-				logging.L.Debug().
-					Any("output", out).
-					Str("wallet_addr", w.Address()).
-					Str("recp_addr", recp.GetAddress()).
-					Bool("is_change", recp.IsChange()).
-					Msg("")
 				switch {
 				case recp.GetAddress() == w.Address():
 					// the encoded address belonged to the wallet so it's a self transfer

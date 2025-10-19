@@ -111,7 +111,7 @@ func (u *OwnedUTXO) SerialiseToOutpoint() [36]byte {
 	// we should be clear about the sotred endianness
 	// this is quite an assumption and might could bite someone
 	copy(out[:], u.Txid[:])
-	utils.ReverseBytes(out[:32])
+	// utils.ReverseBytes(out[:32])
 	binary.LittleEndian.PutUint32(out[32:36], u.Vout)
 	return out
 }

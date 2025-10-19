@@ -21,6 +21,8 @@ import (
 )
 
 // SendToRecipients sends Bitcoin to the given recipients
+//
+// Deprecated: Use Wallet.SendToRecipients instead
 func SendToRecipients(
 	wallet *Wallet,
 	recipients []Recipient,
@@ -31,9 +33,8 @@ func SendToRecipients(
 ) {
 	// Convert recipients to coin selector format
 	var selectorRecipients []Recipient
-	for _, r := range recipients {
-		selectorRecipients = append(selectorRecipients, r)
-	}
+
+	selectorRecipients = append(selectorRecipients, recipients...)
 
 	// Convert UTXOs to coin selector format
 	var utxos UtxoCollection
@@ -208,6 +209,8 @@ func (w *Wallet) SendToRecipients(
 	return txMetaOut, err
 }
 
+const recipientDataKeyChange = "recipientDataKeyChange"
+
 // Taken from blindbitd
 //
 // ParseRecipients
@@ -266,14 +269,19 @@ func ParseRecipients(
 				Address:  recipient.GetAddress(),
 				Amount:   recipient.GetAmount(),
 				PkScript: scriptPubKey,
+				Change:   recipient.IsChange(),
 			}
 			newRecipients = append(newRecipients, newRecipient)
 			continue
 		}
 
+		data := make(map[string]any)
+		data[recipientDataKeyChange] = recipient.IsChange()
+
 		spRecipients = append(spRecipients, &bip352.Recipient{
 			SilentPaymentAddress: recipient.GetAddress(),
 			Amount:               recipient.GetAmount(),
+			Data:                 data,
 		})
 	}
 
@@ -285,13 +293,23 @@ func ParseRecipients(
 	}
 
 	for _, spRecipient := range spRecipients {
-		newRecipients = append(newRecipients, ConvertSPRecipient(spRecipient))
+		newRecp := ConvertSPRecipient(spRecipient)
+		if spRecipient.Data != nil {
+			if changeField, exists := spRecipient.Data[recipientDataKeyChange]; exists {
+				newRecp.Change = changeField.(bool)
+			}
+		}
+		newRecipients = append(newRecipients, newRecp)
 	}
 
 	// This case might not be realistic so the check could potentially be removed safely
 	if len(recipients) != len(newRecipients) {
 		// for some reason we have a different number of recipients after parsing them.
-		return nil, fmt.Errorf("bad length of recipients got %d needed %d", len(newRecipients), len(recipients))
+		err := fmt.Errorf(
+			"bad length of recipients got %d needed %d",
+			len(newRecipients), len(recipients),
+		)
+		return nil, err
 	}
 
 	return newRecipients, nil

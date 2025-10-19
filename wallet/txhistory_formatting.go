@@ -68,30 +68,30 @@ func (t *TxItem) UnmarshalJSON(b []byte) error {
 
 func (in TxIn) MarshalJSON() ([]byte, error) {
 	type out struct {
-		Ouptoint string `json:"ouptoint"`
+		Outpoint string `json:"ouptoint"`
 		Amount   uint64 `json:"amount"`
 	}
 	return json.Marshal(out{
-		Ouptoint: hex.EncodeToString(in.Ouptoint[:]),
+		Outpoint: hex.EncodeToString(in.Outpoint[:]),
 		Amount:   in.Amount,
 	})
 }
 
 func (in *TxIn) UnmarshalJSON(b []byte) error {
 	type tmp struct {
-		Ouptoint string `json:"ouptoint"`
+		Outpoint string `json:"ouptoint"`
 		Amount   uint64 `json:"amount"`
 	}
 	var v tmp
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
-	raw, err := hex.DecodeString(v.Ouptoint)
+	raw, err := hex.DecodeString(v.Outpoint)
 	if err != nil {
 		return err
 	}
 
-	mustCopyToFixed(in.Ouptoint[:], raw)
+	mustCopyToFixed(in.Outpoint[:], raw)
 
 	in.Amount = v.Amount
 	return nil

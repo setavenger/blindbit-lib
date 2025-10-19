@@ -25,7 +25,7 @@ type TxItem struct {
 }
 
 type TxIn struct {
-	Ouptoint [36]byte `json:"ouptoint"`
+	Outpoint [36]byte `json:"ouptoint"`
 	Amount   uint64   `json:"amount"`
 }
 
@@ -51,7 +51,8 @@ func (t TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
 		// we need to add the utxo to the transaction
 		err = txItem.AddOutputSafely(utxo)
 		if err != nil {
-			// this should technically never happen. We are checking for the correct txid above
+			// this should technically never happen.
+			// We are checking for the correct txid above
 			return err
 		}
 		// nothing more todo
@@ -120,7 +121,7 @@ func (t TxHistory) FindTxItemByTxID(txid [32]byte) *TxItem {
 func (t TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
 	for i := range t {
 		for j := range t[i].TxIns {
-			if outpoint == t[i].TxIns[j].Ouptoint {
+			if outpoint == t[i].TxIns[j].Outpoint {
 				return t[i]
 			}
 		}
@@ -198,9 +199,15 @@ func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 		return fmt.Errorf("bad txid: tried adding %x to %x", utxo.Txid, t.TxID)
 	}
 	for i := range t.TxOut {
-		logging.L.Debug().Hex("script", t.TxOut[i].Pubkey).Hex("pubkey", utxo.PubKey[:]).Msg("add safely")
-		// pubkey is in txout is script with prefix 5120, so we compare against x-only key
-		if bytes.Equal(t.TxOut[i].Pubkey[2:], utxo.PubKey[:]) && t.TxOut[i].Vout == utxo.Vout {
+		logging.L.Debug().
+			Hex("script", t.TxOut[i].Pubkey).
+			Hex("pubkey", utxo.PubKey[:]).
+			Msg("add safely")
+		// pubkey is in txout is script with prefix 5120,
+		// so we compare against x-only key
+		isEqualPubKey := bytes.Equal(t.TxOut[i].Pubkey[2:], utxo.PubKey[:])
+		isEqualVout := t.TxOut[i].Vout == utxo.Vout
+		if isEqualPubKey && isEqualVout {
 			// just exit. utxo already exists
 			return nil
 		}
@@ -222,11 +229,17 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 		ConfirmHeight: TxPending,
 	}
 	for i := range txmeta.Tx.TxIn {
+		in := txmeta.Tx.TxIn[i]
+		prevOutpoint := previousOutpointToByteArray(in.PreviousOutPoint)
+
 		for _, walletUtxo := range w.GetUTXOs() {
-			in := txmeta.Tx.TxIn[i]
-			if previousOutpointToByteArray(in.PreviousOutPoint) == walletUtxo.SerialiseToOutpoint() {
+			wUTXOOutpoint := walletUtxo.SerialiseToOutpoint()
+
+			// fmt.Printf("%x - %x\n", prevOutpoint, wUTXOOutpoint)
+
+			if prevOutpoint == wUTXOOutpoint {
 				txItem.TxIns = append(txItem.TxIns, &TxIn{
-					Ouptoint: walletUtxo.SerialiseToOutpoint(),
+					Outpoint: walletUtxo.SerialiseToOutpoint(),
 					Amount:   walletUtxo.Amount,
 				})
 			}
@@ -246,7 +259,14 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 		for j := range txmeta.AllRecipients {
 			recp := txmeta.AllRecipients[j]
 			if bytes.Equal(out.PkScript, recp.GetPkScript()) {
+				fmt.Printf("%x - %x\n", out.PkScript, recp.GetPkScript())
 				// todo: this ignores labels in general
+				logging.L.Debug().
+					Any("output", out).
+					Str("wallet_addr", w.Address()).
+					Str("recp_addr", recp.GetAddress()).
+					Bool("is_change", recp.IsChange()).
+					Msg("")
 				switch {
 				case recp.GetAddress() == w.Address():
 					// the encoded address belonged to the wallet so it's a self transfer

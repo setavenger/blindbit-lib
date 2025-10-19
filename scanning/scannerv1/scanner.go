@@ -159,3 +159,10 @@ func (s *ScannerV1) NewIncompleteUTXOsChan() <-chan *scanning.FoundOutputShort {
 }
 
 func (s *ScannerV1) setScanFalse() { s.scanning = false }
+
+func (s *ScannerV1) AttachWallet(*wallet.Wallet) error { panic("not implemented") }
+
+func (s *ScannerV1) SubscribeSpent() <-chan *wallet.OwnedUTXO {
+	panic("not implemented")
+	return nil
+}

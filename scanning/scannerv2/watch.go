@@ -5,10 +5,18 @@ import (
 	"time"
 
 	"github.com/setavenger/blindbit-lib/logging"
+	"github.com/setavenger/blindbit-lib/scanning"
 )
 
-func (s *ScannerV2) Watch(ctx context.Context) error {
+func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
+	if s.scanning {
+		return scanning.ErrAlreadyScanning
+	}
+
+	s.lastScanHeight = lastHeight
+
 	logging.L.Info().Msg("started watching")
+	// todo: the first time this should trigger immediatly
 	for {
 		select {
 		case <-time.After(10 * time.Second):
@@ -40,7 +48,7 @@ func (s *ScannerV2) Watch(ctx context.Context) error {
 			return err
 		case <-s.stopChan:
 			// no error if we exit via stop chan
-			logging.L.Info().Msg("stop chan triggered")
+			logging.L.Info().Msg("stop signal triggered")
 			return nil
 		}
 	}

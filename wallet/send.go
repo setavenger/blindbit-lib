@@ -58,6 +58,7 @@ func SendToRecipients(
 type TxMetadata struct {
 	Tx              *wire.MsgTx
 	ChangeRecipient *RecipientImpl
+	AllRecipients   []Recipient
 }
 
 func (w *Wallet) SendToRecipients(
@@ -90,9 +91,6 @@ func (w *Wallet) SendToRecipients(
 		logging.L.Err(err).Msg("failed to do coin select")
 		return nil, err
 	}
-
-	// todo: remove debug line
-	fmt.Println("change:", changeAmount)
 
 	// vins is the final selection of coins, which can then be used to derive silentPayment Outputs
 	var vins = make([]*bip352.Vin, len(selectedUTXOs))
@@ -175,11 +173,7 @@ func (w *Wallet) SendToRecipients(
 				return nil, err
 			}
 			for _, utxo := range w.UTXOs {
-				utxoOutpoint, err := utxo.SerialiseToOutpoint()
-				if err != nil {
-					logging.L.Err(err).Msg("failed serialise wallet utxo outpoint")
-					return nil, err
-				}
+				utxoOutpoint := utxo.SerialiseToOutpoint()
 				if bytes.Equal(vinOutpoint[:], utxoOutpoint[:]) {
 					utxo.State = StateUnconfirmedSpent
 					found++
@@ -198,9 +192,17 @@ func (w *Wallet) SendToRecipients(
 		}
 	}
 
+	recipientsCopy := make([]Recipient, len(recipients))
+	copy(recipientsCopy, recipients)
+
+	if changeRecipient != nil {
+		recipientsCopy = append(recipientsCopy, changeRecipient)
+	}
+
 	txMetaOut = &TxMetadata{
 		Tx:              finalTx,
 		ChangeRecipient: changeRecipient,
+		AllRecipients:   recipientsCopy,
 	}
 
 	return txMetaOut, err

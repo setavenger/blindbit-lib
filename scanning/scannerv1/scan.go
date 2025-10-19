@@ -16,7 +16,7 @@ import (
 	"github.com/setavenger/go-bip352"
 )
 
-func (s *ScannerV1) Watch(context.Context) error {
+func (s *ScannerV1) Watch(context.Context, uint32) error {
 	return nil
 }
 

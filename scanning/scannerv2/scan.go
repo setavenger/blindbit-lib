@@ -24,9 +24,16 @@ func (s *ScannerV2) Scan(
 	ctx context.Context,
 	startHeight, endHeight uint32,
 ) error {
+	logging.L.Info().
+		Uint32("start_height", startHeight).
+		Uint32("end_height", endHeight).
+		Msg("starting scan")
 	workChan := make(chan *blockDataNormalised)
 	doneChan := make(chan struct{})
 	errChan := make(chan error)
+
+	s.scanning = true
+	defer s.setScanFalse()
 
 	go func() {
 		err := s.startNormalisedStream(ctx, workChan, startHeight, endHeight)
@@ -40,8 +47,6 @@ func (s *ScannerV2) Scan(
 	var txCounter = 0
 
 	go func() {
-		s.scanning = true
-		defer s.setScanFalse()
 		defer close(doneChan)
 
 		for {
@@ -52,7 +57,11 @@ func (s *ScannerV2) Scan(
 			case <-s.stopChan:
 				logging.L.Info().Msg("scanner stopped")
 				return
-			case blockData := <-workChan:
+			case blockData, ok := <-workChan:
+				if !ok {
+					logging.L.Info().Msg("work channel closed")
+					return
+				}
 				for i := range blockData.computeIndex {
 					txCounter++
 					computeIndexTxItem := blockData.computeIndex[i]
@@ -95,18 +104,22 @@ func (s *ScannerV2) Scan(
 							}
 						}
 					}
+				}
 
-					// mark as spent
-					if s.wallet != nil {
-						matchedUTXOs := matchSpentUTXOs(s.wallet.GetUTXOs(), blockData.spentOutputs)
-						for i := range matchedUTXOs {
-							matchedUTXOs[i].State = wallet.StateSpent
-							if s.spentChanCalled {
-								s.spentChan <- matchedUTXOs[i]
-							}
+				// mark as spent
+				if s.wallet != nil {
+					matchedUTXOs := matchSpentUTXOs(s.wallet.GetUTXOs(), blockData.spentOutputs)
+					for i := range matchedUTXOs {
+						matchedUTXOs[i].State = wallet.StateSpent
+						if s.spentChanCalled {
+							s.spentChan <- matchedUTXOs[i]
 						}
 					}
-					s.lastScanHeight = uint32(blockData.blockIdentifier.BlockHeight)
+				}
+
+				s.lastScanHeight = uint32(blockData.blockIdentifier.BlockHeight)
+				if s.progressChanCalled {
+					s.progressChan <- s.lastScanHeight
 				}
 				logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
 			}
@@ -132,7 +145,19 @@ func (s *ScannerV2) startNormalisedStream(
 	workChan chan *blockDataNormalised,
 	startHeight, endHeight uint32,
 ) error {
+	logging.L.Debug().
+		Uint32("start_height", startHeight).
+		Uint32("end_height", endHeight).
+		Hex("scan_key", s.scanKey[:]).
+		Hex("receiver_spend_pub_key", s.receiverSpendPubKey[:]).
+		Msg("starting normalised stream")
+
+	defer close(workChan)
 	if s.wallet != nil || s.spentChanCalled {
+		logging.L.Info().
+			Uint32("start_height", startHeight).
+			Uint32("end_height", endHeight).
+			Msg("full index stream")
 		// we need to pull the full index
 		stream, err := s.oracleClient.StreamBlockScanDataShort(
 			ctx, &pb.RangedBlockHeightRequestFiltered{
@@ -141,9 +166,13 @@ func (s *ScannerV2) startNormalisedStream(
 			},
 		)
 		if err != nil {
-			logging.L.Err(err).Msg("failed to stream block batch slim")
+			logging.L.Err(err).Msg("failed to stream block scan data short")
 			return err
 		}
+		logging.L.Debug().
+			Uint32("start_height", startHeight).
+			Uint32("end_height", endHeight).
+			Msg("stream opened")
 		defer stream.CloseSend()
 		for {
 			select {
@@ -152,18 +181,18 @@ func (s *ScannerV2) startNormalisedStream(
 			default:
 			}
 			blockData, err := stream.Recv()
-			if err != nil && !errors.Is(err, io.EOF) {
+			if err != nil {
 				if errors.Is(err, io.EOF) {
-					logging.L.Err(err).Msg("failed to receive block batch slim")
-					return err
-				} else {
 					logging.L.Trace().Msg("end of stream")
 					return nil
+				} else {
+					logging.L.Err(err).Msg("failed to receive block scan data short")
+					return err
 				}
 			}
 			spentOutputs := make([][8]byte, len(blockData.SpentOutputs)/8)
-			for i := range len(spentOutputs) {
-				spentOutputs[i] = [8]byte(blockData.SpentOutputs[i*8 : (i+8)*8])
+			for i := range spentOutputs {
+				spentOutputs[i] = [8]byte(blockData.SpentOutputs[i*8 : (i+1)*8])
 			}
 			normalisedBlockData := blockDataNormalised{
 				blockIdentifier: blockData.BlockIdentifier,
@@ -173,6 +202,10 @@ func (s *ScannerV2) startNormalisedStream(
 			workChan <- &normalisedBlockData
 		}
 	} else {
+		logging.L.Info().
+			Uint32("start_height", startHeight).
+			Uint32("end_height", endHeight).
+			Msg("compute index stream")
 		// we need to pull the full index
 		stream, err := s.oracleClient.StreamComputeIndex(
 			ctx, &pb.RangedBlockHeightRequestFiltered{
@@ -181,10 +214,9 @@ func (s *ScannerV2) startNormalisedStream(
 			},
 		)
 		if err != nil {
-			logging.L.Err(err).Msg("failed to stream block batch slim")
+			logging.L.Err(err).Msg("failed to stream compute index")
 			return err
 		}
-
 		defer stream.CloseSend()
 		for {
 			select {
@@ -193,13 +225,13 @@ func (s *ScannerV2) startNormalisedStream(
 			default:
 			}
 			blockData, err := stream.Recv()
-			if err != nil && !errors.Is(err, io.EOF) {
+			if err != nil {
 				if errors.Is(err, io.EOF) {
-					logging.L.Err(err).Msg("failed to receive block batch slim")
-					return err
-				} else {
 					logging.L.Trace().Msg("end of stream")
 					return nil
+				} else {
+					logging.L.Err(err).Msg("failed to receive compute index")
+					return err
 				}
 			}
 			normalisedBlockData := blockDataNormalised{
@@ -207,6 +239,7 @@ func (s *ScannerV2) startNormalisedStream(
 				computeIndex:    blockData.Index,
 				spentOutputs:    make([][8]byte, 0),
 			}
+
 			workChan <- &normalisedBlockData
 		}
 	}
@@ -220,8 +253,10 @@ func matchSpentUTXOs(
 	matchedUTXOs []*wallet.OwnedUTXO,
 ) {
 	// todo: can be optimised with hashmaps or sorted slices
-	for i := range utxos {
-		for j := range spentOutputsShort {
+	// can also extend by only checking unspent utxos
+	// and not double checking etc.
+	for j := range spentOutputsShort {
+		for i := range utxos {
 			if bytes.Equal(utxos[i].PubKey[:8], spentOutputsShort[j][:]) {
 				matchedUTXOs = append(matchedUTXOs, utxos[i])
 			}

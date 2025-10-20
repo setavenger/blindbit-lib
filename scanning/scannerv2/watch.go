@@ -28,6 +28,7 @@ func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
 				//  so we don't abort the function due to an err here
 				// errChan <- err
 				// return
+				continue
 			}
 
 			if uint64(s.lastScanHeight) < newInfo.Height {

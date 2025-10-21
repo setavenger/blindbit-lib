@@ -196,6 +196,21 @@ func MatchLabelsOnShort(
 		if bytes.Equal(txOutput[:8], potentialOutput[1:9]) {
 			return labels[i], err
 		}
+
+		// try negated label pubkey as well
+		var negatedLabel [33]byte
+		copy(negatedLabel[:], labels[i].PubKey[:])
+		err = bip352.NegatePublicKey(&negatedLabel)
+		if err != nil {
+			return nil, err
+		}
+		potentialOutput, err = bip352.AddPublicKeys(&pkInner, &negatedLabel)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal(txOutput[:8], potentialOutput[1:9]) {
+			return labels[i], err
+		}
 	}
 
 	// nothing found so nil label

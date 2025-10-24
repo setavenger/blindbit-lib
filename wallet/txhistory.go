@@ -3,6 +3,7 @@ package wallet
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -19,7 +20,8 @@ type TxItem struct {
 	TxID          [32]byte `json:"txid"`
 	ConfirmHeight int      `json:"confirm_height"` // -1 is pending
 	TxIns         []*TxIn  `json:"tx_ins"`
-	TxOut         []*TxOut `json:"tx_outs"`
+	// todo: rename to plural
+	TxOut []*TxOut `json:"tx_outs"`
 	// todo: make unexported and only use methods for consistent internal state?
 	// use marshaling function with alias for json serialisation?
 }
@@ -127,6 +129,47 @@ func (t TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
 	}
 
 	// return nil if nothing was matched
+	return nil
+}
+
+var (
+	ErrDuplicateTxOut = errors.New("txout is a duplicate")
+	ErrDuplicateTxIn  = errors.New("txin is a duplicate")
+)
+
+func (t *TxItem) AddTxOut(
+	pubkey []byte, amount uint64, self bool, vout uint32,
+) error {
+	for _, out := range t.TxOut {
+		if out.Vout == vout {
+			return ErrDuplicateTxOut
+		}
+	}
+
+	newTxOut := TxOut{
+		Pubkey: pubkey,
+		Amount: amount,
+		Self:   self,
+		Vout:   vout,
+	}
+	t.TxOut = append(t.TxOut, &newTxOut)
+
+	return nil
+}
+
+func (t *TxItem) AddTxIn(outpoint [36]byte, amount uint64) error {
+	for _, txin := range t.TxIns {
+		if txin.Outpoint == outpoint {
+			return ErrDuplicateTxIn
+		}
+	}
+
+	newTxIn := TxIn{
+		Outpoint: outpoint,
+		Amount:   amount,
+	}
+
+	t.TxIns = append(t.TxIns, &newTxIn)
 	return nil
 }
 

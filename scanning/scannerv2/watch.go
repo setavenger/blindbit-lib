@@ -5,13 +5,9 @@ import (
 	"time"
 
 	"github.com/setavenger/blindbit-lib/logging"
-	"github.com/setavenger/blindbit-lib/scanning"
 )
 
 func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
-	if s.scanning {
-		return scanning.ErrAlreadyScanning
-	}
 
 	s.lastScanHeight = lastHeight
 
@@ -28,6 +24,11 @@ func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
 				//  so we don't abort the function due to an err here
 				// errChan <- err
 				// return
+				continue
+			}
+
+			if s.scanning {
+				logging.L.Trace().Msg("already scanning... skipping")
 				continue
 			}
 

@@ -32,6 +32,13 @@ func (s *ScannerV2) Scan(
 	doneChan := make(chan struct{})
 	errChan := make(chan error)
 
+	if s.scanning {
+		logging.L.Warn().Msg("already scanning skipping")
+		// todo: should we throw error
+		// forces calling program to resepct state of scanner
+		return nil
+	}
+
 	s.scanning = true
 	defer s.setScanFalse()
 

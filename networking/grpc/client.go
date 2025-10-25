@@ -1,10 +1,12 @@
-package v2connect
+package grpc
 
 import (
 	"context"
+	"crypto/tls"
 
 	"github.com/setavenger/blindbit-lib/proto/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -14,9 +16,23 @@ type OracleClient struct {
 	conn   *grpc.ClientConn
 }
 
-func NewClient(ctx context.Context, address string) (*OracleClient, error) {
+func NewClient(
+	ctx context.Context, address string, useTLS bool,
+) (
+	*OracleClient, error,
+) {
+	var tc credentials.TransportCredentials
+	if useTLS {
+		tc = credentials.NewTLS(&tls.Config{})
+	} else {
+		tc = insecure.NewCredentials()
+	}
+
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(tc))
+
 	conn, err := grpc.NewClient(
-		address, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		address, opts...,
 	)
 	if err != nil {
 		return nil, err

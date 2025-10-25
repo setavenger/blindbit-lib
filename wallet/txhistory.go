@@ -42,7 +42,7 @@ type TxOut struct {
 // AddOutUtxo adds a received UTXO to the TxHistory
 // Confirms the tx height and
 // also tries to add the utxo to the items if necessary
-func (t TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
+func (t *TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
 	// check if we already have this transaction as something we sent
 	txItem := t.FindTxItemByTxID(utxo.Txid)
 
@@ -52,6 +52,7 @@ func (t TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
 		// we need to add the utxo to the transaction
 		err = txItem.AddOutputSafely(utxo)
 		if err != nil {
+			logging.L.Err(err).Msg("adding output failed")
 			// this should technically never happen.
 			// We are checking for the correct txid above
 			return err
@@ -66,19 +67,20 @@ func (t TxHistory) AddOutUtxo(utxo *OwnedUTXO) (err error) {
 	txItem.ConfirmHeight = int(utxo.Height)
 	err = txItem.AddOutputSafely(utxo)
 	if err != nil {
+		logging.L.Err(err).Msg("adding output failed")
 		// also this error should never trigger. Errors only for wrong txid
 		return err
 	}
 
-	t = append(t, txItem)
+	*t = append(*t, txItem)
 
 	t.Sort()
 
 	return nil
 }
 
-func (t TxHistory) Sort() {
-	slices.SortStableFunc(t, func(a, b *TxItem) int {
+func (t *TxHistory) Sort() {
+	slices.SortStableFunc(*t, func(a, b *TxItem) int {
 		aPending := a.ConfirmHeight == TxPending
 		bPending := b.ConfirmHeight == TxPending
 
@@ -110,20 +112,20 @@ func (t TxHistory) Sort() {
 	})
 }
 
-func (t TxHistory) FindTxItemByTxID(txid [32]byte) *TxItem {
-	for i := range t {
-		if txid == t[i].TxID {
-			return t[i]
+func (t *TxHistory) FindTxItemByTxID(txid [32]byte) *TxItem {
+	for i := range *t {
+		if txid == (*t)[i].TxID {
+			return (*t)[i]
 		}
 	}
 	return nil
 }
 
-func (t TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
-	for i := range t {
-		for j := range t[i].TxIns {
-			if outpoint == t[i].TxIns[j].Outpoint {
-				return t[i]
+func (t *TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
+	for i := range *t {
+		for j := range (*t)[i].TxIns {
+			if outpoint == (*t)[i].TxIns[j].Outpoint {
+				return (*t)[i]
 			}
 		}
 	}
@@ -142,7 +144,8 @@ func (t *TxItem) AddTxOut(
 ) error {
 	for _, out := range t.TxOut {
 		if out.Vout == vout {
-			return ErrDuplicateTxOut
+			// return ErrDuplicateTxOut
+			return nil
 		}
 	}
 
@@ -245,9 +248,9 @@ func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 		return fmt.Errorf("bad txid: tried adding %x to %x", utxo.Txid, t.TxID)
 	}
 	for i := range t.TxOut {
-		logging.L.Debug().
-			Hex("script", t.TxOut[i].Pubkey).
-			Hex("pubkey", utxo.PubKey[:]).
+		logging.L.Trace().
+			Hex("tx_out_pubkey", t.TxOut[i].Pubkey).
+			Hex("utxo_pubkey", utxo.PubKey[:]).
 			Msg("add safely")
 		// pubkey is in txout is script with prefix 5120,
 		// so we compare against x-only key
@@ -259,12 +262,12 @@ func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 		}
 	}
 
-	t.TxOut = append(t.TxOut, &TxOut{
-		Pubkey: utxo.PubKey[:],
-		Amount: utxo.Amount,
-		Self:   true,
-		Vout:   utxo.Vout,
-	})
+	err := t.AddTxOut(utxo.PubKey[:], utxo.Amount, true, utxo.Vout)
+	if err != nil {
+		logging.L.Err(err).Msg("failed to attach utxo to TxItem")
+		return err
+	}
+
 	return nil
 }
 

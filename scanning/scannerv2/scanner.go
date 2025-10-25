@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/setavenger/blindbit-lib/logging"
-	"github.com/setavenger/blindbit-lib/networking/v2connect"
+	"github.com/setavenger/blindbit-lib/networking/grpc"
 	"github.com/setavenger/blindbit-lib/scanning"
 	"github.com/setavenger/blindbit-lib/wallet"
 	"github.com/setavenger/go-bip352"
@@ -19,7 +19,7 @@ var (
 )
 
 type ScannerV2 struct {
-	oracleClient        *v2connect.OracleClient
+	oracleClient        *grpc.OracleClient
 	scanKey             [32]byte
 	receiverSpendPubKey *[33]byte
 	labels              []*bip352.Label
@@ -43,7 +43,7 @@ type ScannerV2 struct {
 }
 
 func NewScannerV2(
-	oracleClient *v2connect.OracleClient,
+	oracleClient *grpc.OracleClient,
 	scanKey [32]byte,
 	receiverSpendPubKey [33]byte,
 	labels []*bip352.Label,

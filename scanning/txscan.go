@@ -10,7 +10,7 @@ import (
 )
 
 // wrapper function for the ReceiverScanTransactionShortOutputs with pb.ShortOutput
-func ReceiverScanTransactionShortOutputsProto(
+func ReceiverScanTxShortOutputsProto(
 	scanKey [32]byte,
 	receiverSpendPubKey *[33]byte,
 	labels []*bip352.Label,

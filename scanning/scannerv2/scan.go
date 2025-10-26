@@ -73,7 +73,7 @@ func (s *ScannerV2) Scan(
 				for i := range blockData.computeIndex {
 					txCounter++
 					computeIndexTxItem := blockData.computeIndex[i]
-					foundOutputs, err := scanning.ReceiverScanTransactionShortOutputsProto(
+					foundOutputs, err := scanning.ReceiverScanTxShortOutputsProto(
 						s.scanKey,
 						s.receiverSpendPubKey,
 						s.labels,
@@ -116,7 +116,9 @@ func (s *ScannerV2) Scan(
 
 				// mark as spent
 				if s.wallet != nil {
-					matchedUTXOs := matchSpentUTXOs(s.wallet.GetUTXOs(), blockData.spentOutputs)
+					matchedUTXOs := matchSpentUTXOs(
+						s.wallet.GetUTXOs(), blockData.spentOutputs,
+					)
 					for i := range matchedUTXOs {
 						matchedUTXOs[i].State = wallet.StateSpent
 						if s.spentChanCalled {
@@ -138,7 +140,9 @@ func (s *ScannerV2) Scan(
 				if s.progressChanCalled {
 					s.progressChan <- s.lastScanHeight
 				}
-				logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
+				logging.L.Debug().
+					Uint32("block_height", s.lastScanHeight).
+					Msg("finished block")
 			}
 		}
 	}()

@@ -63,12 +63,16 @@ func (s *ScannerV1) ScanBlock(blockHeight uint64) ([]*wallet.OwnedUTXO, error) {
 	if len(potentialOutputs) > 0 {
 		// if len(potentialOutputs) > 0 {
 		filterCheckStart := time.Now()
-		filterData, err := s.oracleClient.GetFilter(blockHeight, networking.NewUTXOFilterType)
+		filterData, err := s.oracleClient.GetFilter(
+			blockHeight, networking.NewUTXOFilterType,
+		)
 		if err != nil {
 			logging.L.Err(err).Msg("failed to get UTXO filter")
 			// Continue without filter optimization
 		} else {
-			isMatch, err := matchFilter(filterData.Data, filterData.BlockHash, potentialOutputs)
+			isMatch, err := matchFilter(
+				filterData.Data, filterData.BlockHash, potentialOutputs,
+			)
 			if err != nil {
 				logging.L.Err(err).Msg("failed to match filter")
 				// Continue without filter optimization
@@ -125,18 +129,6 @@ func (s *ScannerV1) ScanBlock(blockHeight uint64) ([]*wallet.OwnedUTXO, error) {
 			Spent:        v.Spent,
 		}
 	}
-
-	// convTweaks := make([][33]byte, len(tweaks))
-	// for i := range tweaks {
-	// 	convTweaks[i] = [33]byte(tweaks[i])
-	// }
-
-	// todo: we are doing computations several times over.
-	// If we have a match we are doing the same step as in precomputtion
-	// ownedUTXOsScan, err := scan.ScanDataOptimized(s, utxosTransform, convTweaks)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to scan data: %w", err)
-	// }
 
 	var ownedUTXOsScan []wallet.OwnedUTXO
 

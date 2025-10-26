@@ -245,7 +245,9 @@ func (t TxItem) ShortPubkeys(self bool) [][8]byte {
 // All added utxos will be marked with self true
 func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 	if t.TxID != utxo.Txid {
-		return fmt.Errorf("bad txid: tried adding %x to %x", utxo.Txid, t.TxID)
+		return fmt.Errorf(
+			"bad txid: tried adding %x to %x", utxo.Txid, t.TxID,
+		)
 	}
 	for i := range t.TxOut {
 		logging.L.Trace().

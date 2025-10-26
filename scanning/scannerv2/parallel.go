@@ -18,10 +18,12 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 	ctx context.Context,
 	startHeight, endHeight uint32,
 ) error {
-	stream, err := s.oracleClient.StreamComputeIndex(ctx, &pb.RangedBlockHeightRequestFiltered{
-		Start: uint64(startHeight),
-		End:   uint64(endHeight),
-	})
+	stream, err := s.oracleClient.StreamComputeIndex(
+		ctx, &pb.RangedBlockHeightRequestFiltered{
+			Start: uint64(startHeight),
+			End:   uint64(endHeight),
+		},
+	)
 	if err != nil {
 		logging.L.Err(err).Msg("failed to stream block batch slim")
 		return err
@@ -80,7 +82,7 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 					for i := range blockData.Index {
 						computeIndexTxItem := blockData.Index[i]
 						txCounter.Add(1)
-						foundOutputs, err := scanning.ReceiverScanTransactionShortOutputsProto(
+						foundOutputs, err := scanning.ReceiverScanTxShortOutputsProto(
 							s.scanKey,
 							s.receiverSpendPubKey,
 							s.labels,
@@ -120,7 +122,9 @@ func (s *ScannerV2) ScanParallelShortOutputs(
 
 						s.lastScanHeight = uint32(blockData.BlockIdentifier.BlockHeight)
 					}
-					logging.L.Debug().Uint32("block_height", s.lastScanHeight).Msg("finished block")
+					logging.L.Debug().
+						Uint32("block_height", s.lastScanHeight).
+						Msg("finished block")
 				}
 			}
 		}()

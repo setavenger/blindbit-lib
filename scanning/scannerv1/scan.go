@@ -22,7 +22,11 @@ func (s *ScannerV1) Watch(context.Context, uint32) error {
 
 // Scan scans the blocks between startHeight and endHeight
 // is blocking
-func (s *ScannerV1) Scan(ctx context.Context, start, end uint32) error {
+func (s *ScannerV1) Scan(
+	ctx context.Context,
+	start, end uint32,
+	rescan bool,
+) error {
 	return nil
 }
 

@@ -23,6 +23,7 @@ type blockDataNormalised struct {
 func (s *ScannerV2) Scan(
 	ctx context.Context,
 	startHeight, endHeight uint32,
+	rescan bool,
 ) error {
 	logging.L.Info().
 		Uint32("start_height", startHeight).
@@ -122,6 +123,15 @@ func (s *ScannerV2) Scan(
 							s.spentChan <- matchedUTXOs[i]
 						}
 					}
+				}
+
+				if rescan {
+					// we don't update lastScanHeight and
+					// the progress channel if it's a rescan
+					logging.L.Debug().
+						Uint32("block_height", s.lastScanHeight).
+						Msg("finished block")
+					continue
 				}
 
 				s.lastScanHeight = uint32(blockData.blockIdentifier.BlockHeight)

@@ -21,7 +21,7 @@ type BaseScanner interface {
 	Watch(ctx context.Context, lastHeight uint32) error
 
 	// Starts the scan for a given range
-	Scan(ctx context.Context, start, end uint32) error
+	Scan(ctx context.Context, start, end uint32, rescan bool) error
 
 	// Should return the current height which is being indexed
 	// Ideally the height from the current scan process

@@ -33,7 +33,7 @@ func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
 			}
 
 			if uint64(s.lastScanHeight) < newInfo.Height {
-				err = s.Scan(ctx, s.lastScanHeight, uint32(newInfo.Height))
+				err = s.Scan(ctx, s.lastScanHeight, uint32(newInfo.Height), false)
 				if err != nil {
 					logging.L.Err(err).
 						Uint32("last_scan_height", s.lastScanHeight).

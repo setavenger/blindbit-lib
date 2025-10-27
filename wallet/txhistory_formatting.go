@@ -25,18 +25,19 @@ func mustCopyToFixed(dst []byte, src []byte) {
 
 // ========== TxItem JSON ==========
 
-func (t TxItem) MarshalJSON() ([]byte, error) {
-	type out struct {
-		TxID          string   `json:"txid"`
-		ConfirmHeight int      `json:"confirm_height"`
-		TxIns         []*TxIn  `json:"tx_ins"`
-		TxOut         []*TxOut `json:"tx_outs"`
-	}
-	return json.Marshal(out{
+type TxItemJSON struct {
+	TxID          string   `json:"txid"`
+	ConfirmHeight int      `json:"confirm_height"`
+	TxIns         []*TxIn  `json:"tx_ins"`
+	TxOuts        []*TxOut `json:"tx_outs"`
+}
+
+func (t *TxItem) MarshalJSON() ([]byte, error) {
+	return json.Marshal(TxItemJSON{
 		TxID:          hex.EncodeToString(t.TxID[:]),
 		ConfirmHeight: t.ConfirmHeight,
-		TxIns:         t.TxIns,
-		TxOut:         t.TxOut,
+		TxIns:         t.txIns,
+		TxOuts:        t.txOuts,
 	})
 }
 
@@ -59,8 +60,8 @@ func (t *TxItem) UnmarshalJSON(b []byte) error {
 	mustCopyToFixed(t.TxID[:], raw)
 
 	t.ConfirmHeight = tmp.ConfirmHeight
-	t.TxIns = tmp.TxIns
-	t.TxOut = tmp.TxOut
+	t.txIns = tmp.TxIns
+	t.txOuts = tmp.TxOut
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/btcsuite/btcd/wire"
 	"github.com/setavenger/blindbit-lib/logging"
@@ -14,16 +15,19 @@ import (
 
 const TxPending int = -1
 
+var (
+	ErrDuplicateTxOut = errors.New("txout is a duplicate")
+	ErrDuplicateTxIn  = errors.New("txin is a duplicate")
+)
+
 type TxHistory []*TxItem
 
 type TxItem struct {
-	TxID          [32]byte `json:"txid"`
-	ConfirmHeight int      `json:"confirm_height"` // -1 is pending
-	TxIns         []*TxIn  `json:"tx_ins"`
-	// todo: rename to plural
-	TxOut []*TxOut `json:"tx_outs"`
-	// todo: make unexported and only use methods for consistent internal state?
-	// use marshaling function with alias for json serialisation?
+	lock          sync.RWMutex
+	TxID          [32]byte
+	ConfirmHeight int
+	txIns         []*TxIn
+	txOuts        []*TxOut
 }
 
 type TxIn struct {
@@ -123,8 +127,8 @@ func (t *TxHistory) FindTxItemByTxID(txid [32]byte) *TxItem {
 
 func (t *TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
 	for i := range *t {
-		for j := range (*t)[i].TxIns {
-			if outpoint == (*t)[i].TxIns[j].Outpoint {
+		for j := range (*t)[i].txIns {
+			if outpoint == (*t)[i].txIns[j].Outpoint {
 				return (*t)[i]
 			}
 		}
@@ -134,20 +138,19 @@ func (t *TxHistory) FindTxItemByOutpoint(outpoint [36]byte) *TxItem {
 	return nil
 }
 
-var (
-	ErrDuplicateTxOut = errors.New("txout is a duplicate")
-	ErrDuplicateTxIn  = errors.New("txin is a duplicate")
-)
-
 func (t *TxItem) AddTxOut(
 	pubkey []byte, amount uint64, self bool, vout uint32,
 ) error {
-	for _, out := range t.TxOut {
+	t.lock.RLock()
+
+	for _, out := range t.txOuts {
 		if out.Vout == vout {
 			// return ErrDuplicateTxOut
+			t.lock.RUnlock()
 			return nil
 		}
 	}
+	t.lock.RUnlock()
 
 	newTxOut := TxOut{
 		Pubkey: pubkey,
@@ -155,24 +158,34 @@ func (t *TxItem) AddTxOut(
 		Self:   self,
 		Vout:   vout,
 	}
-	t.TxOut = append(t.TxOut, &newTxOut)
+
+	t.lock.Lock()
+	t.txOuts = append(t.txOuts, &newTxOut)
+	t.lock.Unlock()
 
 	return nil
 }
 
 func (t *TxItem) AddTxIn(outpoint [36]byte, amount uint64) error {
-	for _, txin := range t.TxIns {
+	t.lock.RLock()
+
+	for _, txin := range t.txIns {
 		if txin.Outpoint == outpoint {
+			t.lock.RUnlock()
 			return ErrDuplicateTxIn
 		}
 	}
+	t.lock.RUnlock()
 
 	newTxIn := TxIn{
 		Outpoint: outpoint,
 		Amount:   amount,
 	}
 
-	t.TxIns = append(t.TxIns, &newTxIn)
+	t.lock.Lock()
+	t.txIns = append(t.txIns, &newTxIn)
+	t.lock.Unlock()
+
 	return nil
 }
 
@@ -185,24 +198,27 @@ const (
 )
 
 // NetAmount gives the total net effect on the wallet fees are included
-func (t TxItem) NetAmount() int {
+func (t *TxItem) NetAmount() int {
 	return t.SumInflows(InflowAggModeSelf) - t.SumOutFlows()
 }
 
-func (t TxItem) Fees() int {
-	if len(t.TxIns) == 0 {
+func (t *TxItem) Fees() int {
+	if len(t.txIns) == 0 {
 		// If we have no Ins we did not pay the fee
 		return 0
 	}
 	return t.SumInflows(InflowAggModeAll) - t.SumOutFlows()
 }
 
+// SumInflows sums the amounts of the txs inputs depending on the aggMode
+// default mode for aggregation is all
 func (t *TxItem) SumInflows(aggMode InflowAggMode) (out int) {
-	for i := range t.TxOut {
-		output := t.TxOut[i]
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+
+	for i := range t.txOuts {
+		output := t.txOuts[i]
 		switch {
-		case aggMode&InflowAggModeAll != 0:
-			out += int(output.Amount)
 		case aggMode&InflowAggModeSelf != 0:
 			if output.Self {
 				out += int(output.Amount)
@@ -211,28 +227,37 @@ func (t *TxItem) SumInflows(aggMode InflowAggMode) (out int) {
 			if !output.Self {
 				out += int(output.Amount)
 			}
+		default:
+			// aggMode&InflowAggModeAll != 0:
+			out += int(output.Amount)
 		}
 	}
 	return out
 }
 
-func (t TxItem) SumOutFlows() (out int) {
-	for i := range t.TxIns {
-		out += int(t.TxIns[i].Amount)
+func (t *TxItem) SumOutFlows() (out int) {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+
+	for i := range t.txIns {
+		out += int(t.txIns[i].Amount)
 	}
 	return
 }
 
-func (t TxItem) ShortPubkeys(self bool) [][8]byte {
+func (t *TxItem) ShortPubkeys(self bool) [][8]byte {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+
 	out := make([][8]byte, 0)
-	for i := range t.TxOut {
+	for i := range t.txOuts {
 		if self {
 			// if we only want self outputs we jump
-			if !t.TxOut[i].Self {
+			if !t.txOuts[i].Self {
 				continue
 			}
 		}
-		out = append(out, [8]byte(t.TxOut[i].Pubkey[:8]))
+		out = append(out, [8]byte(t.txOuts[i].Pubkey[:8]))
 	}
 	return out
 }
@@ -249,20 +274,22 @@ func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 			"bad txid: tried adding %x to %x", utxo.Txid, t.TxID,
 		)
 	}
-	for i := range t.TxOut {
+	t.lock.RLock()
+	for i := range t.txOuts {
 		logging.L.Trace().
-			Hex("tx_out_pubkey", t.TxOut[i].Pubkey).
+			Hex("tx_out_pubkey", t.txOuts[i].Pubkey).
 			Hex("utxo_pubkey", utxo.PubKey[:]).
 			Msg("add safely")
 		// pubkey is in txout is script with prefix 5120,
 		// so we compare against x-only key
-		isEqualPubKey := bytes.Equal(t.TxOut[i].Pubkey[2:], utxo.PubKey[:])
-		isEqualVout := t.TxOut[i].Vout == utxo.Vout
+		isEqualPubKey := bytes.Equal(t.txOuts[i].Pubkey[2:], utxo.PubKey[:])
+		isEqualVout := t.txOuts[i].Vout == utxo.Vout
 		if isEqualPubKey && isEqualVout {
 			// just exit. utxo already exists
 			return nil
 		}
 	}
+	t.lock.RUnlock()
 
 	err := t.AddTxOut(utxo.PubKey[:], utxo.Amount, true, utxo.Vout)
 	if err != nil {
@@ -273,7 +300,7 @@ func (t *TxItem) AddOutputSafely(utxo *OwnedUTXO) error {
 	return nil
 }
 
-func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
+func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) (*TxItem, error) {
 	txid := txmeta.Tx.TxHash()
 	txItem := TxItem{
 		TxID:          [32]byte(utils.ReverseBytesCopy(txid[:])),
@@ -287,10 +314,13 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 			wUTXOOutpoint := walletUtxo.SerialiseToOutpoint()
 
 			if prevOutpoint == wUTXOOutpoint {
-				txItem.TxIns = append(txItem.TxIns, &TxIn{
-					Outpoint: walletUtxo.SerialiseToOutpoint(),
-					Amount:   walletUtxo.Amount,
-				})
+				err := txItem.AddTxIn(wUTXOOutpoint, walletUtxo.Amount)
+				if err != nil {
+					logging.L.Debug().Err(err).
+						Hex("outpoint", wUTXOOutpoint[:]).
+						Msg("failed to add txin")
+					return nil, err
+				}
 			}
 		}
 	}
@@ -320,10 +350,15 @@ func TxItemFromTxMetadata(w *Wallet, txmeta *TxMetadata) *TxItem {
 			}
 		}
 
-		txItem.TxOut = append(txItem.TxOut, &txOut)
+		err := txItem.AddTxOut(txOut.Pubkey, txOut.Amount, txOut.Self, txOut.Vout)
+		if err != nil {
+			logging.L.Debug().Err(err).Msg("failed to add txout to output")
+			return nil, err
+		}
+		// txItem.TxOut = append(txItem.TxOut, &txOut)
 	}
 
-	return &txItem
+	return &txItem, nil
 }
 
 func previousOutpointToByteArray(o wire.OutPoint) [36]byte {

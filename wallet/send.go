@@ -85,7 +85,21 @@ func (w *Wallet) SendToRecipients(
 		return nil, fmt.Errorf("unsupported network: %s", w.Network)
 	}
 
-	selector := NewFeeRateCoinSelector(utxos, minChangeAmount, recipients, chainParams)
+	var utxosToUse UtxoCollection
+	if useSpentUnconfirmed {
+		utxosToUse = make([]*OwnedUTXO, len(utxos))
+		copy(utxosToUse, utxos)
+	} else {
+		// we filter out everything which is not strictly unspent
+		for i := range utxos {
+			if utxos[i].State != StateUnspent {
+				continue
+			}
+			utxosToUse = append(utxosToUse, utxos[i])
+		}
+	}
+
+	selector := NewFeeRateCoinSelector(utxosToUse, minChangeAmount, recipients, chainParams)
 
 	selectedUTXOs, changeAmount, err := selector.CoinSelect(uint32(feeRate))
 	if err != nil {
@@ -403,7 +417,6 @@ func SignPsbt(packet *psbt.Packet, vins []*bip352.Vin) error {
 		}
 
 		pInputs = append(pInputs, pInput)
-
 	}
 
 	packet.Inputs = pInputs
@@ -424,6 +437,7 @@ func matchAndSign(
 	for _, vin := range vins {
 		if bytes.Equal(input.PreviousOutPoint.Hash[:], bip352.ReverseBytesCopy(vin.Txid[:])) &&
 			input.PreviousOutPoint.Index == vin.Vout {
+			// todo: replace with go-bip352 functions
 			privKey, pk := btcec.PrivKeyFromBytes(vin.SecretKey[:])
 
 			if pk.Y().Bit(0) == 1 {

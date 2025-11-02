@@ -8,7 +8,6 @@ import (
 )
 
 func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
-
 	s.lastScanHeight = lastHeight
 
 	logging.L.Info().Msg("started watching")
@@ -39,7 +38,7 @@ func (s *ScannerV2) Watch(ctx context.Context, lastHeight uint32) error {
 						Uint32("last_scan_height", s.lastScanHeight).
 						Uint64("oracle_height", newInfo.Height).
 						Msg("error scanning to tip")
-					return err
+					continue
 				}
 			}
 		case <-ctx.Done():

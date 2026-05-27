@@ -11,7 +11,6 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -22,200 +21,52 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// GetTweakIndexRequest requests tweak index data with optional dust limit filtering
-type GetTweakIndexRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHeight   uint32                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	DustLimit     uint64                 `protobuf:"varint,2,opt,name=dust_limit,json=dustLimit,proto3" json:"dust_limit,omitempty"` // 0 means no dust limit filtering
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetTweakIndexRequest) Reset() {
-	*x = GetTweakIndexRequest{}
-	mi := &file_oracle_service_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetTweakIndexRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetTweakIndexRequest) ProtoMessage() {}
-
-func (x *GetTweakIndexRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oracle_service_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetTweakIndexRequest.ProtoReflect.Descriptor instead.
-func (*GetTweakIndexRequest) Descriptor() ([]byte, []int) {
-	return file_oracle_service_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *GetTweakIndexRequest) GetBlockHeight() uint32 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-func (x *GetTweakIndexRequest) GetDustLimit() uint64 {
-	if x != nil {
-		return x.DustLimit
-	}
-	return 0
-}
-
-// GetFilterRequest requests filter data for a specific block and type
-type GetFilterRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockHeight   uint32                 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	FilterType    FilterType             `protobuf:"varint,2,opt,name=filter_type,json=filterType,proto3,enum=blindbit.oracle.v1.FilterType" json:"filter_type,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetFilterRequest) Reset() {
-	*x = GetFilterRequest{}
-	mi := &file_oracle_service_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetFilterRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetFilterRequest) ProtoMessage() {}
-
-func (x *GetFilterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oracle_service_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetFilterRequest.ProtoReflect.Descriptor instead.
-func (*GetFilterRequest) Descriptor() ([]byte, []int) {
-	return file_oracle_service_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *GetFilterRequest) GetBlockHeight() uint32 {
-	if x != nil {
-		return x.BlockHeight
-	}
-	return 0
-}
-
-func (x *GetFilterRequest) GetFilterType() FilterType {
-	if x != nil {
-		return x.FilterType
-	}
-	return FilterType_FILTER_TYPE_UNSPECIFIED
-}
-
 var File_oracle_service_proto protoreflect.FileDescriptor
 
 const file_oracle_service_proto_rawDesc = "" +
 	"\n" +
-	"\x14oracle_service.proto\x12\x12blindbit.oracle.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x15indexing_server.proto\"X\n" +
-	"\x14GetTweakIndexRequest\x12!\n" +
-	"\fblock_height\x18\x01 \x01(\rR\vblockHeight\x12\x1d\n" +
-	"\n" +
-	"dust_limit\x18\x02 \x01(\x04R\tdustLimit\"v\n" +
-	"\x10GetFilterRequest\x12!\n" +
-	"\fblock_height\x18\x01 \x01(\rR\vblockHeight\x12?\n" +
-	"\vfilter_type\x18\x02 \x01(\x0e2\x1e.blindbit.oracle.v1.FilterTypeR\n" +
-	"filterType2\xb0\t\n" +
-	"\rOracleService\x12j\n" +
-	"\x14StreamBlockBatchSlim\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchSlim0\x01\x12j\n" +
-	"\x14StreamBlockBatchFull\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchFull0\x01\x12p\n" +
-	"\x1aStreamBlockBatchSlimStatic\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchSlim0\x01\x12p\n" +
-	"\x1aStreamBlockBatchFullStatic\x12,.blindbit.oracle.v1.RangedBlockHeightRequest\x1a\".blindbit.oracle.v1.BlockBatchFull0\x01\x12W\n" +
-	"\rGetTweakArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12^\n" +
-	"\x12GetTweakIndexArray\x12(.blindbit.oracle.v1.GetTweakIndexRequest\x1a\x1e.blindbit.oracle.v1.TweakArray\x12]\n" +
-	"\fGetUTXOArray\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.UTXOArrayResponse\x12U\n" +
-	"\tGetFilter\x12$.blindbit.oracle.v1.GetFilterRequest\x1a\".blindbit.oracle.v1.FilterResponse\x12q\n" +
-	"\x16GetSpentOutpointsIndex\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a/.blindbit.oracle.v1.SpentOutpointsIndexResponse\x12C\n" +
+	"\x14oracle_service.proto\x12\x12blindbit.oracle.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x15indexing_server.proto2\xd1\x05\n" +
+	"\rOracleService\x12C\n" +
 	"\aGetInfo\x12\x16.google.protobuf.Empty\x1a .blindbit.oracle.v1.InfoResponse\x12U\n" +
 	"\x12GetBestBlockHeight\x12\x16.google.protobuf.Empty\x1a'.blindbit.oracle.v1.BlockHeightResponse\x12e\n" +
-	"\x14GetBlockHashByHeight\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.BlockHashResponseB\x06Z\x04./pbb\x06proto3"
+	"\x14GetBlockHashByHeight\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.BlockHashResponse\x12\x82\x01\n" +
+	"\x18StreamBlockScanDataShort\x124.blindbit.oracle.v1.RangedBlockHeightRequestFiltered\x1a..blindbit.oracle.v1.BlockScanDataShortResponse0\x01\x12v\n" +
+	"\x12StreamComputeIndex\x124.blindbit.oracle.v1.RangedBlockHeightRequestFiltered\x1a(.blindbit.oracle.v1.ComputeIndexResponse0\x01\x12]\n" +
+	"\fGetFullBlock\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a%.blindbit.oracle.v1.FullBlockResponse\x12a\n" +
+	"\x14GetSpentOutputsShort\x12&.blindbit.oracle.v1.BlockHeightRequest\x1a!.blindbit.oracle.v1.IndexResponseB\x06Z\x04./pbb\x06proto3"
 
-var (
-	file_oracle_service_proto_rawDescOnce sync.Once
-	file_oracle_service_proto_rawDescData []byte
-)
-
-func file_oracle_service_proto_rawDescGZIP() []byte {
-	file_oracle_service_proto_rawDescOnce.Do(func() {
-		file_oracle_service_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_oracle_service_proto_rawDesc), len(file_oracle_service_proto_rawDesc)))
-	})
-	return file_oracle_service_proto_rawDescData
-}
-
-var file_oracle_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_oracle_service_proto_goTypes = []any{
-	(*GetTweakIndexRequest)(nil),        // 0: blindbit.oracle.v1.GetTweakIndexRequest
-	(*GetFilterRequest)(nil),            // 1: blindbit.oracle.v1.GetFilterRequest
-	(FilterType)(0),                     // 2: blindbit.oracle.v1.FilterType
-	(*RangedBlockHeightRequest)(nil),    // 3: blindbit.oracle.v1.RangedBlockHeightRequest
-	(*BlockHeightRequest)(nil),          // 4: blindbit.oracle.v1.BlockHeightRequest
-	(*emptypb.Empty)(nil),               // 5: google.protobuf.Empty
-	(*BlockBatchSlim)(nil),              // 6: blindbit.oracle.v1.BlockBatchSlim
-	(*BlockBatchFull)(nil),              // 7: blindbit.oracle.v1.BlockBatchFull
-	(*TweakArray)(nil),                  // 8: blindbit.oracle.v1.TweakArray
-	(*UTXOArrayResponse)(nil),           // 9: blindbit.oracle.v1.UTXOArrayResponse
-	(*FilterResponse)(nil),              // 10: blindbit.oracle.v1.FilterResponse
-	(*SpentOutpointsIndexResponse)(nil), // 11: blindbit.oracle.v1.SpentOutpointsIndexResponse
-	(*InfoResponse)(nil),                // 12: blindbit.oracle.v1.InfoResponse
-	(*BlockHeightResponse)(nil),         // 13: blindbit.oracle.v1.BlockHeightResponse
-	(*BlockHashResponse)(nil),           // 14: blindbit.oracle.v1.BlockHashResponse
+	(*emptypb.Empty)(nil),                    // 0: google.protobuf.Empty
+	(*BlockHeightRequest)(nil),               // 1: blindbit.oracle.v1.BlockHeightRequest
+	(*RangedBlockHeightRequestFiltered)(nil), // 2: blindbit.oracle.v1.RangedBlockHeightRequestFiltered
+	(*InfoResponse)(nil),                     // 3: blindbit.oracle.v1.InfoResponse
+	(*BlockHeightResponse)(nil),              // 4: blindbit.oracle.v1.BlockHeightResponse
+	(*BlockHashResponse)(nil),                // 5: blindbit.oracle.v1.BlockHashResponse
+	(*BlockScanDataShortResponse)(nil),       // 6: blindbit.oracle.v1.BlockScanDataShortResponse
+	(*ComputeIndexResponse)(nil),             // 7: blindbit.oracle.v1.ComputeIndexResponse
+	(*FullBlockResponse)(nil),                // 8: blindbit.oracle.v1.FullBlockResponse
+	(*IndexResponse)(nil),                    // 9: blindbit.oracle.v1.IndexResponse
 }
 var file_oracle_service_proto_depIdxs = []int32{
-	2,  // 0: blindbit.oracle.v1.GetFilterRequest.filter_type:type_name -> blindbit.oracle.v1.FilterType
-	3,  // 1: blindbit.oracle.v1.OracleService.StreamBlockBatchSlim:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
-	3,  // 2: blindbit.oracle.v1.OracleService.StreamBlockBatchFull:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
-	3,  // 3: blindbit.oracle.v1.OracleService.StreamBlockBatchSlimStatic:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
-	3,  // 4: blindbit.oracle.v1.OracleService.StreamBlockBatchFullStatic:input_type -> blindbit.oracle.v1.RangedBlockHeightRequest
-	4,  // 5: blindbit.oracle.v1.OracleService.GetTweakArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	0,  // 6: blindbit.oracle.v1.OracleService.GetTweakIndexArray:input_type -> blindbit.oracle.v1.GetTweakIndexRequest
-	4,  // 7: blindbit.oracle.v1.OracleService.GetUTXOArray:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	1,  // 8: blindbit.oracle.v1.OracleService.GetFilter:input_type -> blindbit.oracle.v1.GetFilterRequest
-	4,  // 9: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	5,  // 10: blindbit.oracle.v1.OracleService.GetInfo:input_type -> google.protobuf.Empty
-	5,  // 11: blindbit.oracle.v1.OracleService.GetBestBlockHeight:input_type -> google.protobuf.Empty
-	4,  // 12: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:input_type -> blindbit.oracle.v1.BlockHeightRequest
-	6,  // 13: blindbit.oracle.v1.OracleService.StreamBlockBatchSlim:output_type -> blindbit.oracle.v1.BlockBatchSlim
-	7,  // 14: blindbit.oracle.v1.OracleService.StreamBlockBatchFull:output_type -> blindbit.oracle.v1.BlockBatchFull
-	6,  // 15: blindbit.oracle.v1.OracleService.StreamBlockBatchSlimStatic:output_type -> blindbit.oracle.v1.BlockBatchSlim
-	7,  // 16: blindbit.oracle.v1.OracleService.StreamBlockBatchFullStatic:output_type -> blindbit.oracle.v1.BlockBatchFull
-	8,  // 17: blindbit.oracle.v1.OracleService.GetTweakArray:output_type -> blindbit.oracle.v1.TweakArray
-	8,  // 18: blindbit.oracle.v1.OracleService.GetTweakIndexArray:output_type -> blindbit.oracle.v1.TweakArray
-	9,  // 19: blindbit.oracle.v1.OracleService.GetUTXOArray:output_type -> blindbit.oracle.v1.UTXOArrayResponse
-	10, // 20: blindbit.oracle.v1.OracleService.GetFilter:output_type -> blindbit.oracle.v1.FilterResponse
-	11, // 21: blindbit.oracle.v1.OracleService.GetSpentOutpointsIndex:output_type -> blindbit.oracle.v1.SpentOutpointsIndexResponse
-	12, // 22: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
-	13, // 23: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
-	14, // 24: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
-	13, // [13:25] is the sub-list for method output_type
-	1,  // [1:13] is the sub-list for method input_type
-	1,  // [1:1] is the sub-list for extension type_name
-	1,  // [1:1] is the sub-list for extension extendee
-	0,  // [0:1] is the sub-list for field type_name
+	0, // 0: blindbit.oracle.v1.OracleService.GetInfo:input_type -> google.protobuf.Empty
+	0, // 1: blindbit.oracle.v1.OracleService.GetBestBlockHeight:input_type -> google.protobuf.Empty
+	1, // 2: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	2, // 3: blindbit.oracle.v1.OracleService.StreamBlockScanDataShort:input_type -> blindbit.oracle.v1.RangedBlockHeightRequestFiltered
+	2, // 4: blindbit.oracle.v1.OracleService.StreamComputeIndex:input_type -> blindbit.oracle.v1.RangedBlockHeightRequestFiltered
+	1, // 5: blindbit.oracle.v1.OracleService.GetFullBlock:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	1, // 6: blindbit.oracle.v1.OracleService.GetSpentOutputsShort:input_type -> blindbit.oracle.v1.BlockHeightRequest
+	3, // 7: blindbit.oracle.v1.OracleService.GetInfo:output_type -> blindbit.oracle.v1.InfoResponse
+	4, // 8: blindbit.oracle.v1.OracleService.GetBestBlockHeight:output_type -> blindbit.oracle.v1.BlockHeightResponse
+	5, // 9: blindbit.oracle.v1.OracleService.GetBlockHashByHeight:output_type -> blindbit.oracle.v1.BlockHashResponse
+	6, // 10: blindbit.oracle.v1.OracleService.StreamBlockScanDataShort:output_type -> blindbit.oracle.v1.BlockScanDataShortResponse
+	7, // 11: blindbit.oracle.v1.OracleService.StreamComputeIndex:output_type -> blindbit.oracle.v1.ComputeIndexResponse
+	8, // 12: blindbit.oracle.v1.OracleService.GetFullBlock:output_type -> blindbit.oracle.v1.FullBlockResponse
+	9, // 13: blindbit.oracle.v1.OracleService.GetSpentOutputsShort:output_type -> blindbit.oracle.v1.IndexResponse
+	7, // [7:14] is the sub-list for method output_type
+	0, // [0:7] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_oracle_service_proto_init() }
@@ -230,13 +81,12 @@ func file_oracle_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_oracle_service_proto_rawDesc), len(file_oracle_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_oracle_service_proto_goTypes,
 		DependencyIndexes: file_oracle_service_proto_depIdxs,
-		MessageInfos:      file_oracle_service_proto_msgTypes,
 	}.Build()
 	File_oracle_service_proto = out.File
 	file_oracle_service_proto_goTypes = nil

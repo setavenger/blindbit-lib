@@ -21,19 +21,20 @@ import (
 )
 
 // SendToRecipients sends Bitcoin to the given recipients
+//
+// Deprecated: Use Wallet.SendToRecipients instead
 func SendToRecipients(
 	wallet *Wallet,
 	recipients []Recipient,
 	feeRate uint32,
 ) (
-	[]byte,
+	*TxMetadata,
 	error,
 ) {
 	// Convert recipients to coin selector format
 	var selectorRecipients []Recipient
-	for _, r := range recipients {
-		selectorRecipients = append(selectorRecipients, r)
-	}
+
+	selectorRecipients = append(selectorRecipients, recipients...)
 
 	// Convert UTXOs to coin selector format
 	var utxos UtxoCollection
@@ -55,6 +56,12 @@ func SendToRecipients(
 	)
 }
 
+type TxMetadata struct {
+	Tx              *wire.MsgTx
+	ChangeRecipient *RecipientImpl
+	AllRecipients   []Recipient
+}
+
 func (w *Wallet) SendToRecipients(
 	recipients []Recipient,
 	utxos UtxoCollection,
@@ -62,7 +69,7 @@ func (w *Wallet) SendToRecipients(
 	minChangeAmount uint64,
 	markSpent, useSpentUnconfirmed bool,
 ) (
-	txBytes []byte,
+	txMetaOut *TxMetadata,
 	err error,
 ) {
 	// Get chain parameters
@@ -78,16 +85,27 @@ func (w *Wallet) SendToRecipients(
 		return nil, fmt.Errorf("unsupported network: %s", w.Network)
 	}
 
-	selector := NewFeeRateCoinSelector(utxos, minChangeAmount, recipients, chainParams)
+	var utxosToUse UtxoCollection
+	if useSpentUnconfirmed {
+		utxosToUse = make([]*OwnedUTXO, len(utxos))
+		copy(utxosToUse, utxos)
+	} else {
+		// we filter out everything which is not strictly unspent
+		for i := range utxos {
+			if utxos[i].State != StateUnspent {
+				continue
+			}
+			utxosToUse = append(utxosToUse, utxos[i])
+		}
+	}
+
+	selector := NewFeeRateCoinSelector(utxosToUse, minChangeAmount, recipients, chainParams)
 
 	selectedUTXOs, changeAmount, err := selector.CoinSelect(uint32(feeRate))
 	if err != nil {
 		logging.L.Err(err).Msg("failed to do coin select")
 		return nil, err
 	}
-
-	// todo: remove debug line
-	fmt.Println("change:", changeAmount)
 
 	// vins is the final selection of coins, which can then be used to derive silentPayment Outputs
 	var vins = make([]*bip352.Vin, len(selectedUTXOs))
@@ -106,12 +124,16 @@ func (w *Wallet) SendToRecipients(
 		sumAllInputs += vin.Amount
 	}
 
+	var changeRecipient *RecipientImpl
+
 	if changeAmount > 0 {
-		// change exists, and it should be greater than the MinChangeAmount
-		recipients = append(recipients, &RecipientImpl{
+		changeRecipient = &RecipientImpl{
 			Address: w.ChangeAddress(),
 			Amount:  changeAmount,
-		})
+			Change:  true,
+		}
+		// change exists, and it should be greater than the MinChangeAmount
+		recipients = append(recipients, changeRecipient)
 	}
 
 	// extract the ScriptPubKeys of the SP recipients with the selected txInputs
@@ -137,32 +159,18 @@ func (w *Wallet) SendToRecipients(
 
 	err = psbt.MaybeFinalizeAll(packet)
 	if err != nil {
-		panic(err) // todo remove panic
+		return nil, err
 	}
 
 	finalTx, err := psbt.Extract(packet)
 	if err != nil {
-		panic(err) // todo remove panic
+		return nil, err
 	}
 
 	var sumAllOutputs uint64
 	for _, recipient := range recipients {
 		sumAllOutputs += recipient.GetAmount()
 	}
-	// vSize := mempool.GetTxVirtualSize(btcutil.NewTx(finalTx))
-	// actualFee := sumAllInputs - sumAllOutputs
-	// actualFeeRate := float64(actualFee) / float64(vSize)
-
-	// errorTerm := 0.25 // todo make variable
-	// if actualFeeRate > float64(feeRate)+errorTerm {
-	// 	err = fmt.Errorf("actual fee rate deviates to strong from desired fee rate: %f > %d", actualFeeRate, feeRate)
-	// 	return nil, err
-	// }
-	//
-	// if actualFeeRate < float64(feeRate)-errorTerm {
-	// 	err = fmt.Errorf("actual fee rate deviates to strong from desired fee rate: %f < %d", actualFeeRate, feeRate)
-	// 	return nil, err
-	// }
 
 	var buf bytes.Buffer
 	err = finalTx.Serialize(&buf)
@@ -180,26 +188,42 @@ func (w *Wallet) SendToRecipients(
 				return nil, err
 			}
 			for _, utxo := range w.UTXOs {
-				utxoOutpoint, err := utxo.SerialiseToOutpoint()
-				if err != nil {
-					logging.L.Err(err).Msg("failed serialise wallet utxo outpoint")
-					return nil, err
-				}
+				utxoOutpoint := utxo.SerialiseToOutpoint()
 				if bytes.Equal(vinOutpoint[:], utxoOutpoint[:]) {
 					utxo.State = StateUnconfirmedSpent
 					found++
-					logging.L.Debug().Hex("outpoint", utxoOutpoint[:]).Msg("internally marked as unconfirmed spent")
+					logging.L.Debug().
+						Hex("outpoint", utxoOutpoint[:]).
+						Msg("internally marked as unconfirmed spent")
 				}
 			}
 		}
 		if found != len(vins) {
-			err = fmt.Errorf("we could not mark enough utxos as spent. marked %d, needed %d", found, len(vins))
+			err = fmt.Errorf(
+				"we could not mark enough utxos as spent. marked %d, needed %d",
+				found, len(vins),
+			)
 			return nil, err
 		}
 	}
 
-	return buf.Bytes(), err
+	recipientsCopy := make([]Recipient, len(recipients))
+	copy(recipientsCopy, recipients)
+
+	if changeRecipient != nil {
+		recipientsCopy = append(recipientsCopy, changeRecipient)
+	}
+
+	txMetaOut = &TxMetadata{
+		Tx:              finalTx,
+		ChangeRecipient: changeRecipient,
+		AllRecipients:   recipientsCopy,
+	}
+
+	return txMetaOut, err
 }
+
+const recipientDataKeyChange = "recipientDataKeyChange"
 
 // Taken from blindbitd
 //
@@ -259,14 +283,19 @@ func ParseRecipients(
 				Address:  recipient.GetAddress(),
 				Amount:   recipient.GetAmount(),
 				PkScript: scriptPubKey,
+				Change:   recipient.IsChange(),
 			}
 			newRecipients = append(newRecipients, newRecipient)
 			continue
 		}
 
+		data := make(map[string]any)
+		data[recipientDataKeyChange] = recipient.IsChange()
+
 		spRecipients = append(spRecipients, &bip352.Recipient{
 			SilentPaymentAddress: recipient.GetAddress(),
 			Amount:               recipient.GetAmount(),
+			Data:                 data,
 		})
 	}
 
@@ -278,13 +307,23 @@ func ParseRecipients(
 	}
 
 	for _, spRecipient := range spRecipients {
-		newRecipients = append(newRecipients, ConvertSPRecipient(spRecipient))
+		newRecp := ConvertSPRecipient(spRecipient)
+		if spRecipient.Data != nil {
+			if changeField, exists := spRecipient.Data[recipientDataKeyChange]; exists {
+				newRecp.Change = changeField.(bool)
+			}
+		}
+		newRecipients = append(newRecipients, newRecp)
 	}
 
 	// This case might not be realistic so the check could potentially be removed safely
 	if len(recipients) != len(newRecipients) {
 		// for some reason we have a different number of recipients after parsing them.
-		return nil, fmt.Errorf("bad length of recipients got %d needed %d", len(newRecipients), len(recipients))
+		err := fmt.Errorf(
+			"bad length of recipients got %d needed %d",
+			len(newRecipients), len(recipients),
+		)
+		return nil, err
 	}
 
 	return newRecipients, nil
@@ -378,7 +417,6 @@ func SignPsbt(packet *psbt.Packet, vins []*bip352.Vin) error {
 		}
 
 		pInputs = append(pInputs, pInput)
-
 	}
 
 	packet.Inputs = pInputs
@@ -399,6 +437,7 @@ func matchAndSign(
 	for _, vin := range vins {
 		if bytes.Equal(input.PreviousOutPoint.Hash[:], bip352.ReverseBytesCopy(vin.Txid[:])) &&
 			input.PreviousOutPoint.Index == vin.Vout {
+			// todo: replace with go-bip352 functions
 			privKey, pk := btcec.PrivKeyFromBytes(vin.SecretKey[:])
 
 			if pk.Y().Bit(0) == 1 {
@@ -436,12 +475,24 @@ func ConvertSPRecipient(recipient *bip352.Recipient) *RecipientImpl {
 }
 
 func ConvertOwnedUTXOIntoVin(utxo *OwnedUTXO) bip352.Vin {
+	// copy byte slices and arrays which might be in-place changed in later funcs
+	var txid [32]byte
+	var secretKey [32]byte
+	var scriptPubKey [34]byte
+
+	copy(txid[:], utxo.Txid[:])
+	copy(secretKey[:], utxo.PrivKeyTweak[:])
+
+	// fill the first two bytes
+	scriptPubKey[0], scriptPubKey[1] = 0x51, 0x20
+	copy(scriptPubKey[2:], utxo.PubKey[:])
+
 	vin := bip352.Vin{
-		Txid:         utxo.Txid,
+		Txid:         txid,
 		Vout:         utxo.Vout,
 		Amount:       utxo.Amount,
-		ScriptPubKey: append([]byte{0x51, 0x20}, utxo.PubKey[:]...),
-		SecretKey:    &utxo.PrivKeyTweak,
+		ScriptPubKey: scriptPubKey[:],
+		SecretKey:    &secretKey,
 		Taproot:      true,
 	}
 	return vin

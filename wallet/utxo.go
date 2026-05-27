@@ -13,14 +13,16 @@ import (
 )
 
 type OwnedUTXO struct {
-	Txid         [32]byte      `json:"txid"`
-	Vout         uint32        `json:"vout"`
+	Txid [32]byte `json:"txid"`
+	Vout uint32   `json:"vout"`
+	// Amount is is defined in sats
 	Amount       uint64        `json:"amount"`
 	PrivKeyTweak [32]byte      `json:"priv_key_tweak"`
-	PubKey       [32]byte      `json:"pub_key"` // are always even hence we omit the parity byte
+	PubKey       [32]byte      `json:"pub_key"`
 	Timestamp    uint64        `json:"timestamp"`
+	Height       uint32        `json:"height"`
 	State        UTXOState     `json:"utxo_state"`
-	Label        *bip352.Label `json:"label"` // the pubKey associated with the label
+	Label        *bip352.Label `json:"label"`
 }
 
 // OwnedUtxoJSON is an alias/helper. Better for conversion in json to hex etc.
@@ -31,6 +33,7 @@ type OwnedUtxoJSON struct {
 	PrivKeyTweak string           `json:"priv_key_tweak"`
 	PubKey       string           `json:"pub_key"`
 	Timestamp    uint64           `json:"timestamp"`
+	Height       uint32           `json:"height"`
 	State        UTXOState        `json:"utxo_state"`
 	Label        *Bip352LabelJSON `json:"label"` // the pubKey associated with the label
 }
@@ -52,6 +55,7 @@ func (u OwnedUTXO) MarshalJSON() ([]byte, error) {
 		PrivKeyTweak: hex.EncodeToString(u.PrivKeyTweak[:]),
 		PubKey:       hex.EncodeToString(u.PubKey[:]),
 		Timestamp:    u.Timestamp,
+		Height:       u.Height,
 		State:        u.State,
 		Label:        label,
 	}
@@ -93,24 +97,23 @@ func (u *OwnedUTXO) UnmarshalJSON(data []byte) error {
 		PrivKeyTweak: utils.ConvertToFixedLength32(privKeyTweak),
 		PubKey:       utils.ConvertToFixedLength32(pubKey),
 		Timestamp:    aux.Timestamp,
+		Height:       aux.Height,
 		State:        aux.State,
 		Label:        label,
 	}
 	return err
 }
 
-func (u OwnedUTXO) SerialiseToOutpoint() ([36]byte, error) {
-	var buf bytes.Buffer
-	buf.Write(bip352.ReverseBytesCopy(u.Txid[:]))
-	err := binary.Write(&buf, binary.LittleEndian, u.Vout)
-	if err != nil {
-		log.Println(err)
-		return [36]byte{}, err
-	}
-
-	var outpoint [36]byte
-	copy(outpoint[:], buf.Bytes())
-	return outpoint, nil
+// SerialiseToOutpoint returns a 36 byte array
+// Note: reverses the txid after writing to out array
+func (u *OwnedUTXO) SerialiseToOutpoint() [36]byte {
+	var out [36]byte
+	// we should be clear about the sotred endianness
+	// this is quite an assumption and might could bite someone
+	copy(out[:], u.Txid[:])
+	// utils.ReverseBytes(out[:32])
+	binary.LittleEndian.PutUint32(out[32:36], u.Vout)
+	return out
 }
 
 func (u *OwnedUTXO) LabelPubKey() []byte {
